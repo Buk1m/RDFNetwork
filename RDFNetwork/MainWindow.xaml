@@ -4,12 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RDFNetwork"
+        xmlns:viewmodel="clr-namespace:RDFNetwork"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         WindowStyle="None"
         WindowStartupLocation="CenterScreen"
         AllowsTransparency="True"
         Title="MainWindow" Height="600" Width="1100"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:oxy="http://oxyplot.org/wpf"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
         TextElement.FontSize="13"
@@ -21,89 +24,144 @@
         MinWidth="900"
         ResizeMode="CanResizeWithGrip">
 
-  <!-- WindowChrome for resizing with AllowTransparence -->
-  <WindowChrome.WindowChrome>
-    <WindowChrome
-      CaptionHeight="1"
-      CornerRadius="0"
-      ResizeBorderThickness="4"
-      GlassFrameThickness="0" />
-  </WindowChrome.WindowChrome>
+    <!--DataContext binding -->
+    <Window.DataContext>
+        <viewmodel:MainViewModel />
+    </Window.DataContext>
 
-  <!-- Main window -->
-  <Grid MouseDown="DragWindow">
-    <Grid.RowDefinitions>
-      <RowDefinition Height="55" />
-      <RowDefinition Height="*" />
-    </Grid.RowDefinitions>
-    <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="200" />
-      <ColumnDefinition Width="*" />
-    </Grid.ColumnDefinitions>
-    <Grid>
-      <Button Height="55" Background="Transparent" Foreground="Transparent">
-        <materialDesign:PackIcon Foreground="Black" Kind="Menu" Width="40" Height="40" VerticalAlignment="Center"
-                                 HorizontalAlignment="Center" />
-      </Button>
+    <!-- WindowChrome for resizing with AllowTransparence -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome
+            CaptionHeight="1"
+            CornerRadius="0"
+            ResizeBorderThickness="4"
+            GlassFrameThickness="0" />
+    </WindowChrome.WindowChrome>
+
+    <!-- Main window -->
+    <Grid MouseDown="DragWindow">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="55" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+
+        <!-- Topbar -->
+        <Grid Grid.Row="0" Grid.Column="0 " Grid.ColumnSpan="2" Background="#262D4E">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="10*" />
+                <ColumnDefinition Width="50" />
+                <ColumnDefinition Width="50" />
+                <ColumnDefinition Width="50" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.ColumnSpan="5" Text="RDF Neural network" FontSize="18" Foreground="WhiteSmoke"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center" />
+
+            <!-- Minimalize button -->
+            <Button Click="OnClickMinimalize" Grid.Column="1" Background="{x:Null}" BorderBrush="{x:Null}"
+                    Foreground="Black"
+                    Height="55" Width="50"
+                    Padding="0">
+                <materialDesign:PackIcon Margin="0 18 0 0" Kind="WindowMinimize" Width="40" Height="40"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Button>
+
+            <!-- Maximalize button -->
+            <Button Click="OnClickMaximalize" Grid.Column="2" Background="{x:Null}" BorderBrush="{x:Null}"
+                    Foreground="Black"
+                    Height="55" Width="50"
+                    Padding="0">
+                <materialDesign:PackIcon Kind="WindowMaximize" Width="40" Height="45"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Button>
+
+            <!-- Close button -->
+            <Button Click="OnClickClose" Grid.Column="3" Background="{x:Null}" BorderBrush="{x:Null}"
+                    Foreground="Black"
+                    Height="55" Width="50"
+                    Padding="0">
+                <materialDesign:PackIcon Kind="CloseBox" Width="40" Height="45" HorizontalAlignment="Center"
+                                         VerticalAlignment="Center" />
+            </Button>
+        </Grid>
+
+        <!-- Options -->
+        <StackPanel Grid.Column="0" Grid.Row="1">
+
+            <!-- OpenFile Button -->
+            <Button Margin="70 20 20 10" Content="Open file" Command="{Binding OpenFileClick}" />
+
+            <!-- Open in editor -->
+            <Button Background="Transparent" Command="{Binding OpenInTextEditorClick}" Margin="70 0 20 5">
+                <Button.Template>
+                    <ControlTemplate>
+                        <TextBlock Foreground="Black" Height="32" MaxHeight="32" TextWrapping="WrapWithOverflow"
+                                   TextAlignment="Center" Text="{Binding FileName}" />
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Settings -->
+            <TextBlock FontWeight="Bold" Margin="70 20 20 0" TextAlignment="Center">Learning rate:</TextBlock>
+            <TextBox HorizontalContentAlignment="Center" Margin="90 0 40 10"
+                     Text="{Binding LerningRate, StringFormat=N2}" />
+            <TextBlock FontWeight="Bold" Margin="70 10 20 0" TextAlignment="Center">Momentum:</TextBlock>
+            <TextBox HorizontalContentAlignment="Center" Margin="90 0 40 10" Text="{Binding Momentum, StringFormat=N2}" />
+            <TextBlock FontWeight="Bold" Margin="70 10 20 0" TextAlignment="Center">Alfa:</TextBlock>
+            <TextBox HorizontalContentAlignment="Center" Margin="90 0 40 10" Text="{Binding Alfa, StringFormat=N2}" />
+            <TextBlock FontWeight="Bold" Margin="70 10 20 0" TextAlignment="Center">Number of neurons:</TextBlock>
+            <xctk:IntegerUpDown Width="60" Margin="60 5 0 0" Value="{Binding NeuronNumber}" />
+            <TextBlock FontWeight="Bold" Margin="70 20 20 0" TextAlignment="Center">Number of epochs:</TextBlock>
+            <xctk:IntegerUpDown Width="60" Margin="60 5 0 0" Value="{Binding EpochsNumber}" />
+
+            <!-- Approximate button -->
+            <Button Margin="70 30 20 10" Content="Approximate" Command="{Binding ApproximateClick}" />
+            <Button Margin="70 10 20 10" Content="Approximate" Command="{Binding DoStuffClick}" />
+        </StackPanel>
+
+
+        <!-- Sidebar -->
+        <StackPanel x:Name="Sidebar" MouseEnter="Sidebar_OnMouseEnter" MouseLeave="Sidebar_OnMouseLeave" Width="50"
+                    Grid.Row="1" Grid.Column="0" Background="#4A4F51" HorizontalAlignment="Left">
+            <Button Padding="0" HorizontalContentAlignment="Stretch" Height="50" BorderBrush="Transparent"
+                    Background="Transparent" Foreground="AliceBlue">
+                <DockPanel>
+                    <materialDesign:PackIcon Margin="10 0 0 0" Kind="Numeric1Box" Width="30" Height="30"
+                                             HorizontalAlignment="Left" />
+                    <TextBlock Margin="10 0 0 0" Text="Approximation" VerticalAlignment="Center" />
+                </DockPanel>
+            </Button>
+            <Button Padding="0" HorizontalContentAlignment="Stretch" Height="50" BorderBrush="Transparent"
+                    Background="Transparent" Foreground="AliceBlue">
+                <DockPanel>
+                    <materialDesign:PackIcon Margin="10 0 0 0" Kind="Numeric2Box" Width="30" Height="30"
+                                             HorizontalAlignment="Left" />
+                    <TextBlock Margin="10 0 0 0" Text="Classification" VerticalAlignment="Center" />
+                </DockPanel>
+            </Button>
+            <Button Padding="0" HorizontalContentAlignment="Stretch" Height="50" BorderBrush="Transparent"
+                    Background="Transparent" Foreground="AliceBlue">
+                <DockPanel>
+                    <materialDesign:PackIcon Margin="10 0 0 0" Kind="Numeric3Box" Width="30" Height="30"
+                                             HorizontalAlignment="Left" />
+                    <TextBlock Margin="10 0 0 0" Text="Third" VerticalAlignment="Center" />
+                </DockPanel>
+            </Button>
+        </StackPanel>
+
+
+        <Grid Grid.Column="1" Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <oxy:PlotView Grid.Column="1" x:Name="Plot" Model="{Binding PlotModel}" />
+            <oxy:PlotView Grid.Column="0" x:Name="Plot1" Model="{Binding ErrorPlotModel}" />
+        </Grid>
     </Grid>
-
-    <!-- Topbar -->
-    <Grid Grid.Row="0" Grid.Column="1 " Grid.ColumnSpan="2" Background="#262D4E">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="10*" />
-        <ColumnDefinition Width="50" />
-        <ColumnDefinition Width="50" />
-        <ColumnDefinition Width="50" />
-      </Grid.ColumnDefinitions>
-      <TextBlock Grid.ColumnSpan="5" Text="RDF Neural network" FontSize="18" Foreground="WhiteSmoke"
-                 HorizontalAlignment="Center"
-                 VerticalAlignment="Center" />
-
-      <!-- Minimalize button -->
-      <Button Click="OnClickMinimalize" Grid.Column="1" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="Black"
-              Height="55" Width="50"
-              Padding="0">
-        <materialDesign:PackIcon Margin="0 18 0 0" Kind="WindowMinimize" Width="40" Height="40"
-                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
-      </Button>
-
-      <!-- Maximalize button -->
-      <Button Click="OnClickMaximalize" Grid.Column="2" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="Black"
-              Height="55" Width="50"
-              Padding="0">
-        <materialDesign:PackIcon Kind="WindowMaximize" Width="40" Height="45"
-                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
-      </Button>
-
-      <!-- Close button -->
-      <Button Click="OnClickClose" Grid.Column="3" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="Black"
-              Height="55" Width="50"
-              Padding="0">
-        <materialDesign:PackIcon Kind="CloseBox" Width="40" Height="45" HorizontalAlignment="Center"
-                                 VerticalAlignment="Center" />
-      </Button>
-    </Grid>
-
-    <!-- Sidebar -->
-    <StackPanel Grid.Row="1" Grid.Column="0" Background="#4A4F51">
-      <Button Height="50"  BorderBrush="Transparent" Background="Transparent" Foreground="AliceBlue" >
-       <StackPanel Orientation="Horizontal">
-          <materialDesign:PackIcon Kind="Numeric1Box" Width="30" Height="30" />
-          <TextBlock Text="Approximation" VerticalAlignment="Center"/>
-       </StackPanel>
-      </Button>
-      <Button Height="50" BorderBrush="Transparent" Background="Transparent" Foreground="AliceBlue" >
-        <StackPanel Orientation="Horizontal">
-          <materialDesign:PackIcon Kind="Numeric2Box" Width="30" Height="30"/>
-          <TextBlock Text="Classification" VerticalAlignment="Center"/>
-          </StackPanel>
-      </Button>
-      <Button Height="50" BorderBrush="Transparent" Background="Transparent" Foreground="AliceBlue" >
-        <StackPanel Orientation="Horizontal">
-          <materialDesign:PackIcon Kind="Numeric3Box" Width="30" Height="30"/>
-          <TextBlock Text="Approximation" VerticalAlignment="Center"/>
-          </StackPanel>
-      </Button>
-    </StackPanel>
-  </Grid>
 </Window>
