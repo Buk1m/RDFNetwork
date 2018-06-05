@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media;
 using IAD_zadanie02;
+using IAD_zadanie02.KMeansClustering.Model;
 
 namespace RDFNetwork.RBFApproximation
 {
@@ -22,6 +23,7 @@ namespace RDFNetwork.RBFApproximation
         public double Momentum = 0.1;
         private double _prevOutputWeightError;
         private int _epochsNumber;
+        private int _k = 4;
 
         public Approximation( int neuronNumber, double alfa, int epochNumber )
         {
@@ -34,9 +36,9 @@ namespace RDFNetwork.RBFApproximation
 
         public void StuffDooer()
         {
+            Centroid1D._nextId = 0;
             CalculateHiddenLayerOutputs();
             initOutputLayerWeights();
-            //Normalize();
             TotalErrors.Clear();
             for (int j = 0; j < _epochsNumber; j++)
             {
@@ -79,74 +81,27 @@ namespace RDFNetwork.RBFApproximation
 
         #region Private Members
 
-        private void Normalize() //TODO make it right :)
-        {
-            foreach (var hiddenLayerOutput in hiddenLayerOutputs)
-            {
-                double sum = 0;
-                for (int i = 0; i < hiddenLayerOutput.Count; i++)
-                {
-                    sum += hiddenLayerOutput[i];
-                }
-
-                for (int i = 0; i < hiddenLayerOutput.Count; i++)
-                {
-                    hiddenLayerOutput[i] /= sum;
-                }
-            }
-        }
-
         private void CalculateBetaForEachCentroid( double alfa )
         {
             for (var i = 0; i < Centroids.Count; i++)
             {
-                double distanceToNearestCentroid = FindDistanceToNearstCentorid( Centroids[i] );
-               // double distanceToNearestCentroid = EvaluateMeanDistanceToCentorid( Centroids[i] );
+                double distanceToNearestCentroid = MeanDistanceToKNearestCentroids( Centroids[i] );
                 double sigma = alfa * distanceToNearestCentroid;
-                _beta.Add( sigma );
+                _beta.Add( 1/(2*sigma *sigma));
             }
         }
 
-        private double EvaluateMeanDistanceToCentorid( Centroid1D centroid )
+        private double MeanDistanceToKNearestCentroids( Centroid1D centroid )
         {
-            double sum = 0;
-            IEnumerable<SamplePoint1D> centroidSamplePoints =
-                SamplePoints.Where( samplePoint => samplePoint.NearsetPointId == centroid.Id );
-            foreach (var centroidSamplePoint in centroidSamplePoints)
+            List<double> distances = new List<double>();
+            foreach ( var examinedCentorid in Centroids.Where( e => centroid.Id != e.Id ) )
             {
-                Console.WriteLine( centroidSamplePoint.X );
+                distances.Add( Math.Abs( examinedCentorid.X - centroid.X ) );
             }
 
-            foreach (var point in centroidSamplePoints)
-            {
-                sum += CalculateDistance( point, centroid );
-            }
+            distances.Sort();
 
-            if (sum == 0)
-                return 1;
-            return sum / centroidSamplePoints.Count();
-        }
-
-        private double FindDistanceToNearstCentorid( Centroid1D centroid )
-        {
-            if (!Centroids.Any())
-                throw new ArgumentNullException( "centroids" );
-
-            double nearestDistance = Math.Abs( centroid.X - Centroids.First( e => e != centroid ).X );
-
-            foreach (var element in Centroids)
-            {
-                if (centroid != element)
-                {
-                    double examinedDistance = Math.Abs( element.X - centroid.X );
-                    if (nearestDistance > examinedDistance)
-                    {
-                        nearestDistance = examinedDistance;
-                    }
-                }
-            }
-
-            return nearestDistance;
+            return distances.Where( e => e <= distances[_k] ).Sum() / _k;
         }
 
         private void CalculateHiddenLayerOutputs()
@@ -213,8 +168,9 @@ namespace RDFNetwork.RBFApproximation
             return Math.Exp( -beta * Math.Pow( radius, 2 ) );
         }
 
-        private void GenerateCentroids()
+        public void GenerateCentroids()
         {
+            Centroids.Clear();
             for (int i = 0; i < _neuronNumber; i++)
             {
                 int choosenSampleIndex;
@@ -224,7 +180,7 @@ namespace RDFNetwork.RBFApproximation
                     choosenSampleIndex = random.Next( SamplePoints.Count );
                 } while (_excludedSampleIndexes.Contains( choosenSampleIndex ));
 
-                Centroids.Add( new Centroid1D( SamplePoints[choosenSampleIndex].X ) );
+                Centroids.Add( new Centroid1D( SamplePoints[choosenSampleIndex].X, choosenSampleIndex ) );
                 _excludedSampleIndexes.Add( choosenSampleIndex );
             }
         }

@@ -1,14 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using IAD_zadanie02;
+using IAD_zadanie02.KMeansClustering.Model;
 using OxyPlot;
 using OxyPlot.Axes;
-using OxyPlot.Wpf;
-using RDFNetwork.RBFApproximation;
-using LinearAxis = OxyPlot.Axes.LinearAxis;
-using LineSeries = OxyPlot.Series.LineSeries;
+using OxyPlot.Series;
+using RDFNetwork.RBFClassification.Model;
 
-namespace RDFNetwork
+namespace RDFNetwork.RBFClassification.ViewModel
 {
     public class PlotViewModel : BaseViewModel
     {
@@ -25,27 +24,27 @@ namespace RDFNetwork
         #endregion
 
 
-        public void SetUpPlotModelData( List<Centroid1D> centroids, List<SamplePoint1D> samplePoints,
-            List<double> networkOutput, RBFApproximation.Approximation app )
+        public void SetUpPlotModelData( List<Centroid4D> centroids, List<SamplePoint4D> samplePoints,
+            List<double> networkOutput, Classification classification )
         {
             PlotModel.Series.Clear();
 
             _centroids = centroids;
             _samplePoints = samplePoints;
             _networkOutput = networkOutput;
-            _app = app;
+            _classification = classification;
             CreateCentroidLineSerie();
             CreateSamplePointsLineSeries();
-            CreateExpectedPointsLineSeries();
+           // CreateExpectedPointsLineSeries();
         }
 
 
         #region Privates
 
-        private List<Centroid1D> _centroids;
-        private List<SamplePoint1D> _samplePoints;
+        private List<Centroid4D> _centroids;
+        private List<SamplePoint4D> _samplePoints;
         private List<double> _networkOutput;
-        private Approximation _app;
+        private Classification _classification;
 
         public void SetUpModel()
         {
@@ -69,9 +68,16 @@ namespace RDFNetwork
                 MinorGridlineStyle = LineStyle.Dot,
             };
             PlotModel.Axes.Add( axisY );
+
+            var axisMarginRight = new LinearAxis()
+            {
+                Position = AxisPosition.Right,
+                FontSize = 0
+            };
+            PlotModel.Axes.Add( axisMarginRight );
         }
 
-        public void CreateSamplePointsLineSeries()
+        private void CreateSamplePointsLineSeries()
         {
             foreach (var centroid in _centroids)
             {
@@ -85,17 +91,19 @@ namespace RDFNetwork
                     DataFieldY = "yData"
                 };
 
-                IEnumerable<SamplePoint1D> sampleList =
+                IEnumerable<SamplePoint4D> sampleList =
                     _samplePoints.Where( sample => sample.NearsetPointId == centroid.Id );
                 foreach (var sample in sampleList)
                 {
-                    lineSerie.Points.Add( new DataPoint( sample.X, _app.CalculateOutput( sample ) ) );
+                    lineSerie.Points.Add( new DataPoint( sample.X, sample.Y ) );
                 }
+
+                //( sample => lineSerie.Points.Add( new DataPoint( sample.X, _app.CalculateOutput(sample) ) ) );
                 PlotModel.Series.Add( lineSerie );
             }
         }
 
-        public void CreateCentroidLineSerie()
+        private void CreateCentroidLineSerie()
         {
             var lineSerie = new LineSeries
             {
@@ -109,12 +117,13 @@ namespace RDFNetwork
 
             _centroids.ForEach( centroid =>
                 lineSerie.Points.Add( new DataPoint( centroid.X,
-                    _app.CalculateOutput( new SamplePoint1D( centroid.X ) ) ) ) );
+                    _classification.CalculateOutput(
+                        new SamplePoint4D( centroid.X, centroid.Y, centroid.Z, centroid.V ) ) ) ) );
             PlotModel.Series.Add( lineSerie );
         }
 
 
-        public void CreateExpectedPointsLineSeries()
+        private void CreateExpectedPointsLineSeries()
         {
             var lineSerie = new LineSeries
             {
@@ -135,49 +144,6 @@ namespace RDFNetwork
             }
 
             PlotModel.Series.Add( lineSerie );
-        }
-
-
-        public void ShowSamples()
-        {
-            var lineSerie = new LineSeries
-            {
-                LineStyle = LineStyle.None,
-                MarkerSize = 3,
-                MarkerFill = OxyColor.FromAColor( 80, OxyColor.FromRgb( 0, 0, 255 ) ),
-                MarkerType = MarkerType.Triangle,
-                DataFieldX = "xData",
-                DataFieldY = "yData"
-            };
-
-            foreach (var trainSample in SampleRepository.TrainSamples)
-            {
-                lineSerie.Points.Add(new DataPoint(trainSample.Inputs[0], trainSample.ExpectedValues[0]));
-            }
-
-            PlotModel.Series.Add( lineSerie );
-            PlotModel.InvalidatePlot( true );
-
-        }
-
-        public void ShowGeneratedCentroids(List<SamplePoint1D> samplePoints, List<Centroid1D> centroids)
-        {
-            PlotModel.Series.Clear();
-            var lineSerie = new LineSeries
-            {
-                LineStyle = LineStyle.None,
-                MarkerSize = 6,
-                MarkerFill = OxyColor.FromRgb( 0, 0, 0 ),
-                MarkerType = MarkerType.Square,
-                DataFieldX = "xData",
-                DataFieldY = "yData"
-            };
-
-            centroids.ForEach( centroid => lineSerie.Points.Add( new DataPoint( centroid.X, SampleRepository.TrainSamples[centroid.Expected].ExpectedValues.First()) ) ) ;
-
-            PlotModel.Series.Add( lineSerie );
-            ShowSamples();
-            PlotModel.InvalidatePlot( true );
         }
 
         #endregion

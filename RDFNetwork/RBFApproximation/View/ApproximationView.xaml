@@ -43,7 +43,8 @@
 
       <!-- Approximate button -->
       <Button Margin="20 30 20 10" Content="Approximate" Command="{Binding ApproximateClick}" />
-      <Button Margin="20 10 20 10" Content="Approximate" Command="{Binding DoStuffClick}" />
+      <Button Margin="20 10 20 10" Content="Generate" Command="{Binding GenerateClick}" />
+      <Button Margin="20 10 20 10" Content="Plot" Command="{Binding DoStuffClick}" />
     </StackPanel>
     <Grid Grid.Column="1">
       <TabControl>

@@ -19,7 +19,17 @@ namespace RDFNetwork
             GenerateAreaColor();
         }
 
+        public Centroid1D( double x, int expected )
+        {
+            X = x;
+            Id = _nextId++;
+            Rgb = new List<byte>();
+            Expected = expected;
+            GenerateAreaColor();
+        }
+
         public double X { get; set; }
+        public int Expected { get; set; }
 
         public static int _nextId;
         private static readonly Random Random = new Random();

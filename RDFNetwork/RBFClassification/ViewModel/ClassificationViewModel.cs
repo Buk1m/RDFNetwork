@@ -118,16 +118,16 @@ namespace RDFNetwork.RBFClassification.ViewModel
         {
             _classification.SamplePoints = SampleRepository.GetInputSamplePoints4D();
             List<double> outputsList = _classification.DoStuffer();
-//            _plotModelViewModel.SetUpPlotModelData( _classification.Centroids, _classification.SamplePoints, outputsList, _classification );
-//            _errorPlotModelViewModel.SetUpPlotModelData( _classification.TotalErrors );
-//            _plotModelViewModel.PlotModel.InvalidatePlot( true );
-//            _errorPlotModelViewModel.PlotModel.InvalidatePlot( true );
-//            foreach ( var ax in _plotModelViewModel.PlotModel.Axes )
-//                ax.Maximum = ax.Minimum = Double.NaN;
-//            PlotModel.ResetAllAxes();
-//            foreach ( var ax in _errorPlotModelViewModel.PlotModel.Axes )
-//                ax.Maximum = ax.Minimum = Double.NaN;
-//            PlotModel.ResetAllAxes();
+            _plotModelViewModel.SetUpPlotModelData( _classification.Centroids, _classification.SamplePoints, outputsList, _classification );
+            _errorPlotModelViewModel.SetUpPlotModelData( _classification.TotalErrors );
+            _plotModelViewModel.PlotModel.InvalidatePlot( true );
+            _errorPlotModelViewModel.PlotModel.InvalidatePlot( true );
+            foreach ( var ax in _plotModelViewModel.PlotModel.Axes )
+                ax.Maximum = ax.Minimum = Double.NaN;
+            PlotModel.ResetAllAxes();
+            foreach ( var ax in _errorPlotModelViewModel.PlotModel.Axes )
+                ax.Maximum = ax.Minimum = Double.NaN;
+            PlotModel.ResetAllAxes();
         }
 
         private void OpenInTextEditor()

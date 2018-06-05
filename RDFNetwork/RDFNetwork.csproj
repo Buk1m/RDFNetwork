@@ -118,6 +118,7 @@
     <Compile Include="RBFApproximation\View\ApproximationView.xaml.cs">
       <DependentUpon>ApproximationView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="RBFClassification\ViewModel\PlotViewModel.cs" />
     <Compile Include="RBFClassification\View\ClassificationView.xaml.cs">
       <DependentUpon>ClassificationView.xaml</DependentUpon>
     </Compile>
