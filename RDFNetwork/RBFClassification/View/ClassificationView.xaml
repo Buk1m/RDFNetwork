@@ -4,9 +4,61 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:RDFNetwork.RBFClassification.View"
+             xmlns:viewModel="clr-namespace:RDFNetwork.RBFClassification.ViewModel"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:oxy="http://oxyplot.org/wpf"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-            
+        <Grid.DataContext>
+            <viewModel:ClassificationViewModel />
+        </Grid.DataContext>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <!-- Options -->
+        <StackPanel Grid.Column="0">
+
+            <!-- OpenFile Button -->
+            <Button Margin="20 20 20 10" Content="Open file" Command="{Binding OpenFileClick}" />
+
+            <!-- Open in editor -->
+            <Button Background="Transparent" Command="{Binding OpenInTextEditorClick}" Margin="20 0 20 5">
+                <Button.Template>
+                    <ControlTemplate>
+                        <TextBlock Foreground="Black" Height="32" MaxHeight="32" TextWrapping="WrapWithOverflow"
+                       TextAlignment="Center" Text="{Binding FileName}" />
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Settings -->
+            <TextBlock FontWeight="Bold" Margin="20 20 20 0" TextAlignment="Center">Learning rate:</TextBlock>
+            <TextBox HorizontalContentAlignment="Center" Margin="40 0 40 10"
+               Text="{Binding LerningRate, StringFormat=N4}" />
+            <TextBlock FontWeight="Bold" Margin="20 10 20 0" TextAlignment="Center">Momentum:</TextBlock>
+            <TextBox HorizontalContentAlignment="Center" Margin="40 0 40 10" Text="{Binding Momentum, StringFormat=N4}" />
+            <TextBlock FontWeight="Bold" Margin="20 10 20 0" TextAlignment="Center">Alfa:</TextBlock>
+            <TextBox HorizontalContentAlignment="Center" Margin="40 0 40 10" Text="{Binding Alfa, StringFormat=N2}" />
+            <TextBlock FontWeight="Bold" Margin="20 10 20 0" TextAlignment="Center">Number of neurons:</TextBlock>
+            <xctk:IntegerUpDown Width="60" Margin="10 5 0 0" Value="{Binding NeuronNumber}" />
+            <TextBlock FontWeight="Bold" Margin="20 20 20 0" TextAlignment="Center">Number of epochs:</TextBlock>
+            <xctk:IntegerUpDown Width="60" Margin="10 5 0 0" Value="{Binding EpochsNumber}" />
+
+            <!-- Approximate button -->
+            <Button Margin="20 30 20 10" Content="Approximate" Command="{Binding ApproximateClick}" />
+            <Button Margin="20 10 20 10" Content="Approximate" Command="{Binding DoStuffClick}" />
+        </StackPanel>
+        <Grid Grid.Column="1">
+            <TabControl>
+                <TabItem Header="Aproximation">
+                    <oxy:PlotView Model="{Binding PlotModel}"  />
+                </TabItem>
+                <TabItem Header="Squared Error" >
+                    <oxy:PlotView Model="{Binding ErrorPlotModel}"  />
+                </TabItem>
+            </TabControl>
+        </Grid>
     </Grid>
 </UserControl>

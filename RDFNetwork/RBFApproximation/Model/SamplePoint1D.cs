@@ -2,7 +2,7 @@
 
 namespace IAD_zadanie02
 {
-    public class SamplePoint 
+    public class SamplePoint1D 
     {
         public int NearsetPointId { get; internal set; }
         public double X { get; set; }
@@ -10,7 +10,7 @@ namespace IAD_zadanie02
 
         #region Constructor
 
-        public SamplePoint( double x )
+        public SamplePoint1D( double x )
         {
             X = x;
         }

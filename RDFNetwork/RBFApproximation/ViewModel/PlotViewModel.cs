@@ -25,7 +25,7 @@ namespace RDFNetwork
         #endregion
 
 
-        public void SetUpPlotModelData( List<Centroid1D> centroids, List<SamplePoint> samplePoints, List<double> networkOutput, RBFApproximation.Approximation app )
+        public void SetUpPlotModelData( List<Centroid1D> centroids, List<SamplePoint1D> samplePoints, List<double> networkOutput, RBFApproximation.Approximation app )
         {
             PlotModel.Series.Clear();
 
@@ -36,14 +36,13 @@ namespace RDFNetwork
             CreateCentroidLineSerie();
             CreateSamplePointsLineSeries();
             CreateExpectedPointsLineSeries();
-
         }
 
         
         #region Privates
 
         private List<Centroid1D> _centroids;
-        private List<SamplePoint> _samplePoints;
+        private List<SamplePoint1D> _samplePoints;
         private List<double> _networkOutput;
         private Approximation _app;
  
@@ -93,7 +92,7 @@ namespace RDFNetwork
                     DataFieldY = "yData"
                 };
 
-                IEnumerable<SamplePoint> sampleList =_samplePoints.Where( sample => sample.NearsetPointId == centroid.Id );
+                IEnumerable<SamplePoint1D> sampleList =_samplePoints.Where( sample => sample.NearsetPointId == centroid.Id );
                 foreach (var sample in sampleList)
                 {
                         lineSerie.Points.Add(new DataPoint(sample.X, _app.CalculateOutput(sample)));
@@ -117,7 +116,7 @@ namespace RDFNetwork
                 DataFieldY = "yData"
             };
 
-            _centroids.ForEach( centroid => lineSerie.Points.Add( new DataPoint( centroid.X, _app.CalculateOutput( new SamplePoint( centroid.X ) ) ) ) );
+            _centroids.ForEach( centroid => lineSerie.Points.Add( new DataPoint( centroid.X, _app.CalculateOutput( new SamplePoint1D( centroid.X ) ) ) ) );
             PlotModel.Series.Add( lineSerie );
         }
 

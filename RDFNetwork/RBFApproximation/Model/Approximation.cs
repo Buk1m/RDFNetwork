@@ -12,7 +12,7 @@ namespace RDFNetwork.RBFApproximation
         private readonly Random random = new Random();
         private int _neuronNumber;
         private readonly List<double> _beta = new List<double>();
-        public List<SamplePoint> SamplePoints { get; set; } = SampleRepository.GetInputSamplePoints();
+        public List<SamplePoint1D> SamplePoints { get; set; } = SampleRepository.GetInputSamplePoints();
         public List<Centroid1D> Centroids = new List<Centroid1D>();
         private List<int> _excludedSampleIndexes = new List<int>();
         private Neuron _neuron = new Neuron();
@@ -110,7 +110,7 @@ namespace RDFNetwork.RBFApproximation
         private double EvaluateMeanDistanceToCentorid( Centroid1D centroid )
         {
             double sum = 0;
-            IEnumerable<SamplePoint> centroidSamplePoints =
+            IEnumerable<SamplePoint1D> centroidSamplePoints =
                 SamplePoints.Where( samplePoint => samplePoint.NearsetPointId == centroid.Id );
             foreach (var centroidSamplePoint in centroidSamplePoints)
             {
@@ -154,23 +154,23 @@ namespace RDFNetwork.RBFApproximation
             hiddenLayerOutputs.Clear();
             for (var j = 0; j < SamplePoints.Count; j++)
             {
-                SamplePoint samplePoint = SamplePoints[j];
+                SamplePoint1D samplePoint1D = SamplePoints[j];
                 hiddenLayerOutputs.Add( new List<double>() );
                 for (int i = 0; i < _neuronNumber; i++)
                 {
                     hiddenLayerOutputs[j]
-                        .Add( BasisFunction( CalculateDistance( samplePoint, Centroids[i] ), _beta[i] ) );
+                        .Add( BasisFunction( CalculateDistance( samplePoint1D, Centroids[i] ), _beta[i] ) );
                 }
             }
         }
 
-        public double CalculateOutput( SamplePoint samplePoint )
+        public double CalculateOutput( SamplePoint1D samplePoint1D )
         {
             List<double> ho = new List<double>();
 
             for (int i = 0; i < _neuronNumber; i++)
             {
-                ho.Add( BasisFunction( CalculateDistance( samplePoint, Centroids[i] ), _beta[i] ) );
+                ho.Add( BasisFunction( CalculateDistance( samplePoint1D, Centroids[i] ), _beta[i] ) );
             }
 
             _neuron.Inputs = ho;
@@ -229,13 +229,13 @@ namespace RDFNetwork.RBFApproximation
             }
         }
 
-        private int GetTheNearestCentroidsId( SamplePoint samplePoint )
+        private int GetTheNearestCentroidsId( SamplePoint1D samplePoint1D )
         {
             int nearestCentroidId = Centroids.First().Id;
-            double nearestDistance = CalculateDistance( samplePoint, Centroids.First() );
+            double nearestDistance = CalculateDistance( samplePoint1D, Centroids.First() );
             foreach (var centroid in Centroids)
             {
-                double distance = CalculateDistance( samplePoint, centroid );
+                double distance = CalculateDistance( samplePoint1D, centroid );
                 if (distance < nearestDistance)
                 {
                     nearestCentroidId = centroid.Id;
@@ -246,9 +246,9 @@ namespace RDFNetwork.RBFApproximation
             return nearestCentroidId;
         }
 
-        private double CalculateDistance( SamplePoint samplePoint, Centroid1D centroid )
+        private double CalculateDistance( SamplePoint1D samplePoint1D, Centroid1D centroid )
         {
-            return Math.Abs( samplePoint.X - centroid.X );
+            return Math.Abs( samplePoint1D.X - centroid.X );
         }
 
         #endregion

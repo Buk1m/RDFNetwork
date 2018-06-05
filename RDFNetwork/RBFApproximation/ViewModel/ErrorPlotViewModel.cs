@@ -57,7 +57,12 @@ namespace RDFNetwork
                 MinorGridlineStyle = LineStyle.Dot,
             };
             PlotModel.Axes.Add( axisY );
-
+            var axisMarginRight = new LinearAxis()
+            {
+                Position = AxisPosition.Right,
+                FontSize = 0
+            };
+            PlotModel.Axes.Add( axisMarginRight );
 
         }
 

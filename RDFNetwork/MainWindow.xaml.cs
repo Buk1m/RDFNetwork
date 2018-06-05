@@ -17,6 +17,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using RDFNetwork.RBFApproximation.View;
+using RDFNetwork.RBFApproximation.ViewModel;
 
 namespace RDFNetwork
 {
@@ -27,10 +29,31 @@ namespace RDFNetwork
     {
         public MainWindow()
         {
+            DataContext = _mainViewModel;
             InitializeComponent();
         }
 
-        #region Private
+        private readonly MainViewModel _mainViewModel = new MainViewModel();
+
+        private void Approximation_OnClick( object sender, RoutedEventArgs e )
+        {
+            ContentControl.DataContext = new RBFApproximation.ViewModel.ApproximationViewModel();
+            ContentControl.Visibility = Visibility.Visible;
+            _mainViewModel.TaskName = "Approximation RBF Network";
+        }
+
+        private void Classification_OnClick( object sender, RoutedEventArgs e )
+        {
+            ContentControl.DataContext = new RBFClassification.ViewModel.ClassificationViewModel();
+            ContentControl.Visibility = Visibility.Visible;
+            _mainViewModel.TaskName = "Classification RBF Network";
+        }
+
+
+        #region Sidebar Animations
+
+        private bool animationCompleted;
+        private bool mouseInside;
 
         private void DragWindow( object sender, MouseButtonEventArgs e )
         {
@@ -51,13 +74,6 @@ namespace RDFNetwork
         {
             WindowState = WindowState.Minimized;
         }
-
-        #endregion
-
-
-        private bool animationCompleted;
-        private bool mouseInside;
-
 
         private async void method()
         {
@@ -112,12 +128,20 @@ namespace RDFNetwork
 
         void hideSidebar( object sender, EventArgs e )
         {
-            if ( !mouseInside )
+            if (!mouseInside)
             {
-                DoubleAnimation slideOut = new DoubleAnimation { To = 50, Duration = TimeSpan.FromSeconds( 1 ), DecelerationRatio = 0.9 };
+                DoubleAnimation slideOut = new DoubleAnimation
+                {
+                    To = 50,
+                    Duration = TimeSpan.FromSeconds( 1 ),
+                    DecelerationRatio = 0.9
+                };
                 Sidebar.BeginAnimation( WidthProperty, slideOut );
                 animationCompleted = false;
             }
         }
+
+        #endregion
+
     }
 }
