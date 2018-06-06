@@ -32,11 +32,6 @@ namespace RDFNetwork.RBFClassification.Model
             }
         }
 
-        public double DerivativeFu()
-        {
-            return Output * (1 - Output);
-        }
-
         public double ErrorBackPropagationLinear( double expectedValue )
         {
             return (Output - expectedValue);

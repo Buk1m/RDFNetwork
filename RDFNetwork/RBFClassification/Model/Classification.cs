@@ -15,12 +15,13 @@ namespace RDFNetwork.RBFClassification.Model
         private Neuron _neuron = new Neuron();
         private List<List<double>> hiddenLayerOutputs = new List<List<double>>();
         public List<double> TotalErrors = new List<double>();
+        public List<double> Outputs = new List<double>();
         public double LearningRate = 0.05;
         public double Momentum = 0.1;
         private double _prevOutputWeightError;
         private int _epochsNumber;
         private int _neuronNumber;
-        private KMeansAlgorithm _kMeansAlgorithm = new KMeansAlgorithm();
+        public KMeansAlgorithm KMeansAlgorithm = new KMeansAlgorithm();
         private readonly List<double> _beta = new List<double>();
         private int _k = 3;
 
@@ -28,16 +29,16 @@ namespace RDFNetwork.RBFClassification.Model
         {
             _epochsNumber = epochNumber;
             _neuronNumber = neuronNumber;
-            _kMeansAlgorithm.SamplePoints = SampleRepository.GetInputSamplePoints4D();
-            _kMeansAlgorithm.GenrateCentroids( _neuronNumber );
-            Centroids = _kMeansAlgorithm.Centroids;
+            KMeansAlgorithm.SamplePoints = SamplePoints;
+            KMeansAlgorithm.GenrateCentroids( _neuronNumber );
+            Centroids = KMeansAlgorithm.Centroids;
             for (int i = 0; i < epochNumber; i++)
             {
-                _kMeansAlgorithm.AssignSamplePointsToNearestCentroids();
-                _kMeansAlgorithm.UpdateCentroidsCoordinates();
+                KMeansAlgorithm.AssignSamplePointsToNearestCentroids();
+                KMeansAlgorithm.UpdateCentroidsCoordinates();
             }
 
-            Centroids = _kMeansAlgorithm.Centroids;
+            Centroids = KMeansAlgorithm.Centroids;
             CalculateBetaForEachCentroid( alfa );
         }
 
@@ -72,12 +73,11 @@ namespace RDFNetwork.RBFClassification.Model
             for (int j = 0; j < _epochsNumber; j++)
             {
                 var error = 0.0;
-                Console.WriteLine( "\n\nEpoch number " + ( j + 1 ) );
                 for (var i = 0; i < hiddenLayerOutputs.Count; i++)
                 {
                     _neuron.Inputs = hiddenLayerOutputs[i];
                     _neuron.CalculateOutput();
-                    Console.WriteLine( ( i + 1 ) + " " + _neuron.Output );
+
                     Train( hiddenLayerOutputs[i], SampleRepository.TrainSamples[i].ExpectedValues.First() );
 
                     error += _neuron.CalculateError( SampleRepository.TrainSamples[i].ExpectedValues.First() );
@@ -93,7 +93,7 @@ namespace RDFNetwork.RBFClassification.Model
 
             for ( int i = 0; i < _neuronNumber; i++ )
             {
-                ho.Add( BasisFunction( _kMeansAlgorithm.CalculateDistance( samplePoint4D, Centroids[i] ), _beta[i] ) );
+                ho.Add( BasisFunction( KMeansAlgorithm.CalculateDistance( samplePoint4D, Centroids[i] ), _beta[i] ) );
             }
 
             _neuron.Inputs = ho;
@@ -101,20 +101,18 @@ namespace RDFNetwork.RBFClassification.Model
             return _neuron.Output;
         }
 
-        public List<double> DoStuffer()
+        public void DoStuffer()
         {
-            List<double> outputs = new List<double>();
-    
+            Outputs.Clear();
             CalculateHiddenLayerOutputs();
+            KMeansAlgorithm.AssignSamplePointsToNearestCentroids();
             for (var i = 0; i < hiddenLayerOutputs.Count; i++)
             {
                 _neuron.Inputs = hiddenLayerOutputs[i];
                 _neuron.CalculateOutput();
-                outputs.Add( _neuron.Output );
-                Console.WriteLine( ( i + 1 ) + "\t" + _neuron.Output );
+                Outputs.Add( _neuron.Output );
             }
-
-            return outputs;
+ 
         }
 
         private void Train( List<double> hiddenLayerOutput, double expected )
@@ -149,7 +147,8 @@ namespace RDFNetwork.RBFClassification.Model
 
         private void InitOutputLayerWeights()
         {
-            for (var j = 0; j < hiddenLayerOutputs.First().Count; j++)
+            _neuron.Weights.Clear();
+            for ( var j = 0; j < hiddenLayerOutputs.First().Count; j++)
             {
                 _neuron.Weights.Add( random.NextDouble() );
             }
@@ -165,7 +164,7 @@ namespace RDFNetwork.RBFClassification.Model
                 for (int i = 0; i < _neuronNumber; i++)
                 {
                     hiddenLayerOutputs[j]
-                        .Add( BasisFunction( _kMeansAlgorithm.CalculateDistance( samplePoint4D, Centroids[i] ),
+                        .Add( BasisFunction( KMeansAlgorithm.CalculateDistance( samplePoint4D, Centroids[i] ),
                             _beta[i] ) );
                 }
             }

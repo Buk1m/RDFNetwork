@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using IAD_zadanie02;
 using OxyPlot;
@@ -90,7 +91,9 @@ namespace RDFNetwork
                 foreach (var sample in sampleList)
                 {
                     lineSerie.Points.Add( new DataPoint( sample.X, _app.CalculateOutput( sample ) ) );
+                   // Console.WriteLine( sample.X + " " + _app.CalculateOutput( sample ) );
                 }
+
                 PlotModel.Series.Add( lineSerie );
             }
         }
@@ -138,7 +141,7 @@ namespace RDFNetwork
         }
 
 
-        public void ShowSamples()
+        public void ShowSamples(bool flatten)
         {
             var lineSerie = new LineSeries
             {
@@ -152,15 +155,14 @@ namespace RDFNetwork
 
             foreach (var trainSample in SampleRepository.TrainSamples)
             {
-                lineSerie.Points.Add(new DataPoint(trainSample.Inputs[0], trainSample.ExpectedValues[0]));
+                lineSerie.Points.Add( new DataPoint( trainSample.Inputs[0], flatten ? 0 : trainSample.ExpectedValues[0] ) );
             }
 
             PlotModel.Series.Add( lineSerie );
             PlotModel.InvalidatePlot( true );
-
         }
 
-        public void ShowGeneratedCentroids(List<SamplePoint1D> samplePoints, List<Centroid1D> centroids)
+        public void ShowGeneratedCentroids( List<SamplePoint1D> samplePoints, List<Centroid1D> centroids, bool flatten )
         {
             PlotModel.Series.Clear();
             var lineSerie = new LineSeries
@@ -173,11 +175,38 @@ namespace RDFNetwork
                 DataFieldY = "yData"
             };
 
-            centroids.ForEach( centroid => lineSerie.Points.Add( new DataPoint( centroid.X, SampleRepository.TrainSamples[centroid.Expected].ExpectedValues.First()) ) ) ;
+
+                centroids.ForEach( centroid => lineSerie.Points.Add( new DataPoint( centroid.X,
+                    flatten ? 0 : SampleRepository.TrainSamples[centroid.Expected].ExpectedValues.First() ) ) );
+            
 
             PlotModel.Series.Add( lineSerie );
-            ShowSamples();
+            ShowSamples(flatten);
             PlotModel.InvalidatePlot( true );
+
+            foreach (var centroid in centroids)
+            {
+                var sampleSeries = new LineSeries
+                {
+                    LineStyle = LineStyle.None,
+                    MarkerSize = 3,
+                    MarkerFill = OxyColor.FromRgb( centroid.Rgb[0], centroid.Rgb[1], centroid.Rgb[2] ),
+                    MarkerType = MarkerType.Circle,
+                    DataFieldX = "xData",
+                    DataFieldY = "yData"
+                };
+
+                IEnumerable<SamplePoint1D> sampleList =
+                    samplePoints.Where( sample => sample.NearsetPointId == centroid.Id );
+
+                    foreach ( var sample in sampleList )
+                    {
+                        sampleSeries.Points.Add( new DataPoint( sample.X, flatten ? 0 : sample.Expected ) );
+                    }
+
+                PlotModel.Series.Add( sampleSeries );
+                PlotModel.InvalidatePlot( true );
+            }
         }
 
         #endregion

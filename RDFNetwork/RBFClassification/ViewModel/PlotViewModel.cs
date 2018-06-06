@@ -24,18 +24,16 @@ namespace RDFNetwork.RBFClassification.ViewModel
         #endregion
 
 
-        public void SetUpPlotModelData( List<Centroid4D> centroids, List<SamplePoint4D> samplePoints,
-            List<double> networkOutput, Classification classification )
+        public void SetUpPlotModelData( Classification classification, int selectedPlot, int selectedDataRange )
         {
             PlotModel.Series.Clear();
 
-            _centroids = centroids;
-            _samplePoints = samplePoints;
-            _networkOutput = networkOutput;
+            _centroids = classification.Centroids;
+            _samplePoints = classification.SamplePoints;
+            _networkOutput = classification.Outputs;
             _classification = classification;
-            CreateCentroidLineSerie();
-            CreateSamplePointsLineSeries();
-           // CreateExpectedPointsLineSeries();
+            CreateCentroidLineSerie( selectedPlot, selectedDataRange );
+            CreateSamplePointsLineSeries( selectedPlot, selectedDataRange );
         }
 
 
@@ -77,75 +75,230 @@ namespace RDFNetwork.RBFClassification.ViewModel
             PlotModel.Axes.Add( axisMarginRight );
         }
 
-        private void CreateSamplePointsLineSeries()
+        private void CreateSamplePointsLineSeries( int selectedPlot, int selectedDataRange )
+        {
+            var ones = new LineSeries
+            {
+                LineStyle = LineStyle.None,
+                MarkerSize = 3,
+                MarkerFill = OxyColor.FromRgb( 0, 0, 255 ),
+                MarkerType = MarkerType.Circle,
+                DataFieldX = "xData",
+                DataFieldY = "yData"
+            };
+            var twos = new LineSeries
+            {
+                LineStyle = LineStyle.None,
+                MarkerSize = 3,
+                MarkerFill = OxyColor.FromRgb( 0, 255, 0 ),
+                MarkerType = MarkerType.Circle,
+                DataFieldX = "xData",
+                DataFieldY = "yData"
+            };
+            var threes = new LineSeries
+            {
+                LineStyle = LineStyle.None,
+                MarkerSize = 3,
+                MarkerFill = OxyColor.FromRgb( 255, 0, 0 ),
+                MarkerType = MarkerType.Circle,
+                DataFieldX = "xData",
+                DataFieldY = "yData"
+            };
+            var mistejkenOne = new LineSeries
+            {
+                LineStyle = LineStyle.None,
+                MarkerSize = 5,
+                MarkerFill = OxyColor.FromRgb( 0, 0, 255 ),
+                MarkerType = MarkerType.Diamond,
+                DataFieldX = "xData",
+                DataFieldY = "yData"
+            };
+            var mistejkenTwo = new LineSeries
+            {
+                LineStyle = LineStyle.None,
+                MarkerSize = 5,
+                MarkerFill = OxyColor.FromRgb( 0, 255, 0 ),
+                MarkerType = MarkerType.Diamond,
+                DataFieldX = "xData",
+                DataFieldY = "yData"
+            };
+            var mistejkenThree = new LineSeries
+            {
+                LineStyle = LineStyle.None,
+                MarkerSize = 5,
+                MarkerFill = OxyColor.FromRgb( 255, 0, 0 ),
+                MarkerType = MarkerType.Diamond,
+                DataFieldX = "xData",
+                DataFieldY = "yData"
+            };
+
+            for (var i = 0; i < _samplePoints.Count; i++)
+            {
+                DataPoint dataPoint = new DataPoint();
+                double X = 0.0;
+                double Y = 0.0;
+                if (selectedPlot == 0)
+                {
+                    X = _samplePoints[i].X;
+                }
+
+                if (selectedPlot == 1)
+                {
+                    X = _samplePoints[i].Y;
+                }
+
+                if (selectedPlot == 2)
+                {
+                    X = _samplePoints[i].Z;
+                }
+
+                if (selectedPlot == 3)
+                {
+                    X = _samplePoints[i].V;
+                }
+
+                if (selectedPlot == selectedDataRange)
+                {
+                    selectedDataRange = 3;
+                }
+
+
+                if (selectedDataRange == 0)
+                {
+                    Y = _samplePoints[i].X;
+                }
+
+                if (selectedDataRange == 1)
+                {
+                    Y = _samplePoints[i].Y;
+                }
+
+                if (selectedDataRange == 2)
+                {
+                    Y = _samplePoints[i].Z;
+                }
+
+                if (selectedDataRange == 3)
+                {
+                    Y = _samplePoints[i].V;
+                }
+
+
+                dataPoint = new DataPoint(X,Y);
+
+                if (_networkOutput[i] < 1.5)
+                {
+                    if (SampleRepository.TrainSamples[i].ExpectedValues.First() >= 2.5)
+                        mistejkenThree.Points.Add( dataPoint );
+                    else if (SampleRepository.TrainSamples[i].ExpectedValues.First() >= 1.5)
+                        mistejkenTwo.Points.Add( dataPoint );
+
+                    ones.Points.Add( dataPoint );
+                }
+                else if (_networkOutput[i] < 2.5)
+                {
+                    if (SampleRepository.TrainSamples[i].ExpectedValues.First() >= 2.5)
+                        mistejkenThree.Points.Add( dataPoint );
+                    else if (SampleRepository.TrainSamples[i].ExpectedValues.First() < 1.5)
+                        mistejkenOne.Points.Add( dataPoint );
+
+                    twos.Points.Add( dataPoint );
+                }
+                else
+                {
+                    if (SampleRepository.TrainSamples[i].ExpectedValues.First() < 1.5)
+                        mistejkenOne.Points.Add( dataPoint );
+
+                    else if (SampleRepository.TrainSamples[i].ExpectedValues.First() < 2.5)
+                        mistejkenTwo.Points.Add( dataPoint );
+
+                    threes.Points.Add( dataPoint );
+                }
+            }
+
+            PlotModel.Series.Add( mistejkenOne );
+            PlotModel.Series.Add( mistejkenTwo );
+            PlotModel.Series.Add( mistejkenThree );
+            PlotModel.Series.Add( ones );
+            PlotModel.Series.Add( twos );
+            PlotModel.Series.Add( threes );
+        }
+
+        private void CreateCentroidLineSerie(int selectedPlot, int selectedDataRange)
         {
             foreach (var centroid in _centroids)
             {
                 var lineSerie = new LineSeries
                 {
                     LineStyle = LineStyle.None,
-                    MarkerSize = 3,
-                    MarkerFill = OxyColor.FromRgb( centroid.Rgb[0], centroid.Rgb[1], centroid.Rgb[2] ),
-                    MarkerType = MarkerType.Circle,
+                    MarkerSize = 6,
+                    MarkerFill = OxyColor.FromRgb( 0, 0, 0 ),
+                    MarkerType = MarkerType.Square,
                     DataFieldX = "xData",
                     DataFieldY = "yData"
                 };
 
-                IEnumerable<SamplePoint4D> sampleList =
-                    _samplePoints.Where( sample => sample.NearsetPointId == centroid.Id );
-                foreach (var sample in sampleList)
+
+
+
+                double X = 0;
+                double Y = 0;
+                DataPoint dataPoint = new DataPoint();
+                if ( selectedPlot == 0 )
                 {
-                    lineSerie.Points.Add( new DataPoint( sample.X, sample.Y ) );
+                    X = centroid.X;
                 }
 
-                //( sample => lineSerie.Points.Add( new DataPoint( sample.X, _app.CalculateOutput(sample) ) ) );
+                if ( selectedPlot == 1 )
+                {
+                    X = centroid.Y;
+                }
+
+                if ( selectedPlot == 2 )
+                {
+                    X = centroid.Z;
+                }
+
+                if ( selectedPlot == 3 )
+                {
+                    X = centroid.V;
+                }
+
+                if ( selectedPlot == selectedDataRange )
+                {
+                    selectedDataRange = 3;
+                }
+
+
+                if ( selectedDataRange == 0 )
+                {
+                    Y = centroid.X;
+                }
+
+                if ( selectedDataRange == 1 )
+                {
+                    Y = centroid.Y;
+                }
+
+                if ( selectedDataRange == 2 )
+                {
+                    Y = centroid.Z;
+                }
+
+                if ( selectedDataRange == 3 )
+                {
+                    Y = centroid.V;
+                }
+
+                dataPoint = new DataPoint( X, Y);
+
+                lineSerie.Points.Add( dataPoint );
                 PlotModel.Series.Add( lineSerie );
+
+
+
             }
         }
-
-        private void CreateCentroidLineSerie()
-        {
-            var lineSerie = new LineSeries
-            {
-                LineStyle = LineStyle.None,
-                MarkerSize = 6,
-                MarkerFill = OxyColor.FromRgb( 0, 0, 0 ),
-                MarkerType = MarkerType.Square,
-                DataFieldX = "xData",
-                DataFieldY = "yData"
-            };
-
-            _centroids.ForEach( centroid =>
-                lineSerie.Points.Add( new DataPoint( centroid.X,
-                    _classification.CalculateOutput(
-                        new SamplePoint4D( centroid.X, centroid.Y, centroid.Z, centroid.V ) ) ) ) );
-            PlotModel.Series.Add( lineSerie );
-        }
-
-
-        private void CreateExpectedPointsLineSeries()
-        {
-            var lineSerie = new LineSeries
-            {
-                LineStyle = LineStyle.None,
-                MarkerSize = 3,
-                MarkerFill = OxyColor.FromAColor( 70, OxyColor.FromRgb( 255, 0, 0 ) ),
-                MarkerType = MarkerType.Triangle,
-                DataFieldX = "xData",
-                DataFieldY = "yData"
-            };
-
-
-            for (var index = 0; index < _samplePoints.Count; index++)
-            {
-                var sample = _samplePoints[index];
-                lineSerie.Points.Add( new DataPoint( sample.X,
-                    SampleRepository.TrainSamples[index].ExpectedValues.First() ) );
-            }
-
-            PlotModel.Series.Add( lineSerie );
-        }
-
         #endregion
     }
 }

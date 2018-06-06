@@ -11,7 +11,6 @@ namespace IAD_zadanie02
         public double Z { get; set; }
         public double V { get; set; }
 
-
         #region Constructor
 
         public SamplePoint4D( double x, double y, double z, double v )

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using IAD_zadanie02;
 
@@ -21,9 +22,12 @@ namespace RDFNetwork
         public static List<SamplePoint1D> GetInputSamplePoints()
         {
             List<SamplePoint1D> samplePoints = new List<SamplePoint1D>();
-            foreach ( var trainSample in SampleRepository.TrainSamples )
+            foreach (var trainSample in SampleRepository.TrainSamples)
             {
-                trainSample.Inputs.ForEach( input => samplePoints.Add( new SamplePoint1D( input ) ) );
+                samplePoints.Add( new SamplePoint1D( trainSample.Inputs.First(), trainSample.ExpectedValues.First() ) );
+
+
+               // trainSample.Inputs.ForEach( input => samplePoints.Add( new SamplePoint1D( input ) ) );
             }
 
             return samplePoints;
@@ -33,13 +37,12 @@ namespace RDFNetwork
         public static List<SamplePoint4D> GetInputSamplePoints4D()
         {
             List<SamplePoint4D> samplePoints = new List<SamplePoint4D>();
-            foreach ( var trainSample in SampleRepository.TrainSamples )
+            foreach (var trainSample in SampleRepository.TrainSamples)
             {
-                samplePoints.Add( new SamplePoint4D( trainSample.Inputs ));
+                samplePoints.Add( new SamplePoint4D( trainSample.Inputs ) );
             }
 
             return samplePoints;
         }
     }
 }
-

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using IAD_zadanie02.KMeansClustering.Model;
 using Microsoft.Win32;
 using OxyPlot;
 using RDFNetwork.Commands;
@@ -23,6 +24,9 @@ namespace RDFNetwork.RBFClassification.ViewModel
             DoStuffClick = new RelayCommand( DoStuff );
             _plotModelViewModel = new PlotViewModel();
             _errorPlotModelViewModel = new ErrorPlotViewModel();
+            DataRangeX = new RelayCommand(()=>SelectedDataRange = 0);
+            DataRangeY = new RelayCommand(()=>SelectedDataRange = 1);
+            DataRangeZ = new RelayCommand(()=>SelectedDataRange = 2);
         }
 
         #region Commands
@@ -31,17 +35,23 @@ namespace RDFNetwork.RBFClassification.ViewModel
         public RelayCommand OpenInTextEditorClick { get; }
         public ICommand ApproximateClick { get; }
         public ICommand DoStuffClick { get; }
+        public ICommand DataRangeX { get; }
+        public ICommand DataRangeY { get; }
+        public ICommand DataRangeZ { get; }
 
         #endregion
 
         #region Public Properties
 
+        /// <summary>
+        /// File 
+        /// </summary>
         public string FileName
         {
             get => _fileName;
             private set
             {
-                if ( _fileName == value )
+                if (_fileName == value)
                     return;
 
                 _fileName = value;
@@ -50,6 +60,44 @@ namespace RDFNetwork.RBFClassification.ViewModel
             }
         }
 
+        /// <summary>
+        /// Network Settings
+        /// </summary>
+        public double LerningRate { get; set; } = 0.05;
+        public double Momentum { get; set; } = 0.5;
+        public double Alfa { get; set; } = 1.1;
+        public int EpochsNumber { get; set; } = 500;
+        public int NeuronNumber { get; set; } = 10;
+
+        /// <summary>
+        /// Plot Settings
+        /// </summary>
+        public int SelectedPlot
+        {
+            get => _selectedPlot;
+            set
+            {
+                if (_selectedPlot == value)
+                    return;
+
+                _selectedPlot = value;
+                DrawPlot();
+                OnPropertyChanged();
+            }
+        }
+        public int SelectedDataRange
+        {
+            get => _selectedDataRange;
+            set
+            {
+                if ( _selectedDataRange == value )
+                    return;
+
+                _selectedDataRange = value;
+                DrawPlot();
+                OnPropertyChanged();
+            }
+        }
         public PlotModel PlotModel
         {
             get => _plotModelViewModel.PlotModel;
@@ -61,19 +109,14 @@ namespace RDFNetwork.RBFClassification.ViewModel
             internal set => _errorPlotModelViewModel.PlotModel = value;
         }
 
-        public double LerningRate { get; set; } = 0.05;
-        public double Momentum { get; set; } = 0.5;
-        public double Alfa { get; set; } = 1.1;
-        public int EpochsNumber { get; set; } = 500;
-        public int NeuronNumber { get; set; } = 10;
-
         #endregion
 
 
         #region Private Members
 
         private string _fileName;
-
+        private int _selectedPlot = 0;
+        private int _selectedDataRange = 0;
         private string _pathToFile;
 
         private readonly PlotViewModel _plotModelViewModel;
@@ -85,7 +128,7 @@ namespace RDFNetwork.RBFClassification.ViewModel
             openFileDialog.Filter = "TextFiles (*.txt)|*.txt";
             openFileDialog.RestoreDirectory = true;
 
-            if ( openFileDialog.ShowDialog() == true )
+            if (openFileDialog.ShowDialog() == true)
             {
                 _pathToFile = openFileDialog.FileName;
                 FileName = openFileDialog.FileName.Split( '\\' ).Last();
@@ -93,11 +136,11 @@ namespace RDFNetwork.RBFClassification.ViewModel
                 {
                     SampleRepository.TrainSamples = FileReader.ReadFromFile( openFileDialog.FileName );
                 }
-                catch ( FileNotFoundException fnfe )
+                catch (FileNotFoundException fnfe)
                 {
                     MessageBox.Show( fnfe.Message );
                 }
-                catch ( FormatException fe )
+                catch (FormatException fe)
                 {
                     MessageBox.Show( fe.Message );
                 }
@@ -117,14 +160,24 @@ namespace RDFNetwork.RBFClassification.ViewModel
         private void DoStuff()
         {
             _classification.SamplePoints = SampleRepository.GetInputSamplePoints4D();
-            List<double> outputsList = _classification.DoStuffer();
-            _plotModelViewModel.SetUpPlotModelData( _classification.Centroids, _classification.SamplePoints, outputsList, _classification );
-            _errorPlotModelViewModel.SetUpPlotModelData( _classification.TotalErrors );
+            _classification.DoStuffer();
+            DrawPlot();
+            DrawErrorPlot();
+        }
+
+        private void DrawPlot()
+        {
+            _plotModelViewModel.SetUpPlotModelData( _classification, SelectedPlot, SelectedDataRange );
             _plotModelViewModel.PlotModel.InvalidatePlot( true );
-            _errorPlotModelViewModel.PlotModel.InvalidatePlot( true );
             foreach ( var ax in _plotModelViewModel.PlotModel.Axes )
                 ax.Maximum = ax.Minimum = Double.NaN;
             PlotModel.ResetAllAxes();
+        }
+
+        private void DrawErrorPlot()
+        {
+            _errorPlotModelViewModel.SetUpPlotModelData( _classification.TotalErrors );
+            _errorPlotModelViewModel.PlotModel.InvalidatePlot( true );
             foreach ( var ax in _errorPlotModelViewModel.PlotModel.Axes )
                 ax.Maximum = ax.Minimum = Double.NaN;
             PlotModel.ResetAllAxes();
@@ -136,13 +189,12 @@ namespace RDFNetwork.RBFClassification.ViewModel
             {
                 System.Diagnostics.Process.Start( "notepad++.exe", _pathToFile );
             }
-            catch ( Win32Exception )
+            catch (Win32Exception)
             {
                 System.Diagnostics.Process.Start( "explorer.exe", _pathToFile );
             }
         }
 
         #endregion
-
     }
 }

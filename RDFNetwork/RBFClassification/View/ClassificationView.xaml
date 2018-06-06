@@ -1,14 +1,14 @@
 ﻿<UserControl x:Class="RDFNetwork.RBFClassification.View.ClassificationView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:RDFNetwork.RBFClassification.View"
              xmlns:viewModel="clr-namespace:RDFNetwork.RBFClassification.ViewModel"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              xmlns:oxy="http://oxyplot.org/wpf"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="800">
     <Grid>
         <Grid.DataContext>
             <viewModel:ClassificationViewModel />
@@ -28,7 +28,7 @@
                 <Button.Template>
                     <ControlTemplate>
                         <TextBlock Foreground="Black" Height="32" MaxHeight="32" TextWrapping="WrapWithOverflow"
-                       TextAlignment="Center" Text="{Binding FileName}" />
+                                   TextAlignment="Center" Text="{Binding FileName}" />
                     </ControlTemplate>
                 </Button.Template>
             </Button>
@@ -36,7 +36,7 @@
             <!-- Settings -->
             <TextBlock FontWeight="Bold" Margin="20 20 20 0" TextAlignment="Center">Learning rate:</TextBlock>
             <TextBox HorizontalContentAlignment="Center" Margin="40 0 40 10"
-               Text="{Binding LerningRate, StringFormat=N4}" />
+                     Text="{Binding LerningRate, StringFormat=N4}" />
             <TextBlock FontWeight="Bold" Margin="20 10 20 0" TextAlignment="Center">Momentum:</TextBlock>
             <TextBox HorizontalContentAlignment="Center" Margin="40 0 40 10" Text="{Binding Momentum, StringFormat=N4}" />
             <TextBlock FontWeight="Bold" Margin="20 10 20 0" TextAlignment="Center">Alfa:</TextBlock>
@@ -46,17 +46,51 @@
             <TextBlock FontWeight="Bold" Margin="20 20 20 0" TextAlignment="Center">Number of epochs:</TextBlock>
             <xctk:IntegerUpDown Width="60" Margin="10 5 0 0" Value="{Binding EpochsNumber}" />
 
+            <Border CornerRadius="4" Background="#3F51B4" Margin="20 15 20 0" >
+                <StackPanel >
+                    <TextBlock FontWeight="Bold" Foreground="WhiteSmoke" Margin="5" TextAlignment="Center">Data range:</TextBlock>
+
+                    <ComboBox BorderBrush="{x:Null}" SelectedIndex="{Binding SelectedPlot}"
+                              Height="35" Width="140"  HorizontalAlignment="Center"
+                              FontSize="15" HorizontalContentAlignment="Center">
+
+                        <ComboBoxItem Content="Sepal Length  ▼" FontSize="15" HorizontalAlignment="Center"
+                                      BorderBrush="{x:Null}" />
+                        <ComboBoxItem Content="Sepal Width   ▼" FontSize="15" HorizontalAlignment="Center"
+                                      BorderBrush="{x:Null}" />
+                        <ComboBoxItem Content="Petal Length  ▼" FontSize="15" HorizontalAlignment="Center"
+                                      BorderBrush="{x:Null}" />
+                        <ComboBoxItem Content="Petal Width   ▼" FontSize="15" HorizontalAlignment="Center"
+                                      BorderBrush="{x:Null}" />
+                    </ComboBox>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Padding="0" Margin="10 5" Content="X" Command="{Binding DataRangeX}" />
+
+                        <Button Grid.Column="1" Padding="0" Margin="10 5"  Content="Y" Command="{Binding DataRangeY}" />
+
+                        <Button Grid.Column="2" Padding="0" Margin="10 5"  Content="Z" Command="{Binding DataRangeZ}" />
+                    </Grid>
+                </StackPanel>
+
+
+            </Border>
             <!-- Approximate button -->
-            <Button Margin="20 30 20 10" Content="Approximate" Command="{Binding ApproximateClick}" />
-            <Button Margin="20 10 20 10" Content="Approximate" Command="{Binding DoStuffClick}" />
+            <Button Margin="20 30 20 10" Content="Classify" Command="{Binding ApproximateClick}" />
+            <Button Margin="20 10 20 10" Content="Plot" Command="{Binding DoStuffClick}" />
         </StackPanel>
         <Grid Grid.Column="1">
             <TabControl>
-                <TabItem Header="Aproximation">
-                    <oxy:PlotView Model="{Binding PlotModel}"  />
+                <TabItem Header="Classification">
+                    <oxy:PlotView Model="{Binding PlotModel}" />
                 </TabItem>
-                <TabItem Header="Squared Error" >
-                    <oxy:PlotView Model="{Binding ErrorPlotModel}"  />
+                <TabItem Header="Squared Error">
+                    <oxy:PlotView Model="{Binding ErrorPlotModel}" />
                 </TabItem>
             </TabControl>
         </Grid>

@@ -63,7 +63,6 @@ namespace RDFNetwork
                 FontSize = 0
             };
             PlotModel.Axes.Add( axisMarginRight );
-
         }
 
         private void CreateSamplePointsLineSeries()
@@ -71,7 +70,7 @@ namespace RDFNetwork
             var lineSerie = new LineSeries
             {
                 LineStyle = LineStyle.Solid,
-                Color = OxyColor.FromRgb( 255,0,0 ),
+                Color = OxyColor.FromRgb( 255, 0, 0 ),
                 DataFieldX = "xData",
                 DataFieldY = "yData"
             };

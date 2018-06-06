@@ -36,7 +36,7 @@ namespace RDFNetwork
 
         private void GenerateAreaColor()
         {
-            for ( int i = 0; i < 3; i++ )
+            for (int i = 0; i < 3; i++)
             {
                 Rgb.Add( RandomValue() );
             }
@@ -44,8 +44,9 @@ namespace RDFNetwork
 
         private byte RandomValue()
         {
-            return (byte)Random.Next( 0, 255 );   
+            return (byte) Random.Next( 0, 255 );
         }
+
         #endregion
     }
 }

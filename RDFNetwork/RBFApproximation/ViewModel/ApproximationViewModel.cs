@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using OxyPlot;
 using RDFNetwork.Commands;
@@ -23,7 +24,6 @@ namespace RDFNetwork.RBFApproximation.ViewModel
             _plotModelViewModel = new PlotViewModel();
             _errorPlotModelViewModel = new ErrorPlotViewModel();
             GenerateClick = new RelayCommand( Generate );
-
         }
 
         #region Commands
@@ -69,6 +69,7 @@ namespace RDFNetwork.RBFApproximation.ViewModel
         public double Alfa { get; set; } = 1.1;
         public int EpochsNumber { get; set; } = 500;
         public int NeuronNumber { get; set; } = 10;
+        public bool Flatten { get; set; } = false;
 
         #endregion
 
@@ -80,12 +81,16 @@ namespace RDFNetwork.RBFApproximation.ViewModel
         private readonly PlotViewModel _plotModelViewModel;
         private readonly ErrorPlotViewModel _errorPlotModelViewModel;
         private Approximation _app;
+        private DispatcherTimer _timer;
+        private int iterator = 0;
+        private bool TemporaryTemper = true;
 
         public void Generate()
         {
-            _app = new Approximation( NeuronNumber, Alfa, EpochsNumber );
+            _app = new Approximation( NeuronNumber, Alfa );
             _app.SamplePoints = SampleRepository.GetInputSamplePoints();
-            _plotModelViewModel.ShowGeneratedCentroids( _app.SamplePoints, _app.Centroids ); ;
+            _app.AssignSamplePointsToNearestCentroids();
+            _plotModelViewModel.ShowGeneratedCentroids( _app.SamplePoints, _app.Centroids, TemporaryTemper );
         }
 
         private void OpenFile()
@@ -101,7 +106,7 @@ namespace RDFNetwork.RBFApproximation.ViewModel
                 {
                     SampleRepository.TrainSamples = FileReader.ReadFromFile( openFileDialog.FileName );
                     _plotModelViewModel.PlotModel.Series.Clear();
-                    _plotModelViewModel.ShowSamples();
+                    _plotModelViewModel.ShowSamples( TemporaryTemper );
                 }
                 catch (FileNotFoundException fnfe)
                 {
@@ -117,17 +122,37 @@ namespace RDFNetwork.RBFApproximation.ViewModel
 
         private void Aproximate()
         {
-            
+            iterator = 0;
             _app.StuffDooer();
+            StartLearningProcess();
+        }
+
+
+        private void StartLearningProcess()
+        {
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds( 0 ) };
+            _timer.Tick += AutoLearningTicker;
+            _timer.Start();
+        }
+
+        private void AutoLearningTicker( object sender, EventArgs e )
+        {
+            if (iterator++ > EpochsNumber)
+                _timer.Stop();
+            _app.Learn();
+            _plotModelViewModel.SetUpPlotModelData( _app.Centroids, _app.SamplePoints, _app.Outputs, _app );
+            _errorPlotModelViewModel.SetUpPlotModelData( _app.TotalErrors );
+            _plotModelViewModel.PlotModel.InvalidatePlot( true );
+            _errorPlotModelViewModel.PlotModel.InvalidatePlot( true );
 
         }
 
-        private void DoStuff()
+        public void DoStuff()
         {
             _app.SamplePoints = SampleRepository.GetInputSamplePoints();
             _app.AssignSamplePointsToNearestCentroids();
             List<double> outputsList = _app.DoStuffer();
-            _plotModelViewModel.SetUpPlotModelData( _app.Centroids, _app.SamplePoints, outputsList, _app );
+            _plotModelViewModel.SetUpPlotModelData( _app.Centroids, _app.SamplePoints, _app.Outputs, _app );
             _errorPlotModelViewModel.SetUpPlotModelData( _app.TotalErrors );
             _plotModelViewModel.PlotModel.InvalidatePlot( true );
             _errorPlotModelViewModel.PlotModel.InvalidatePlot( true );

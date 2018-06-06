@@ -24,8 +24,8 @@
         TextOptions.TextRenderingMode="Auto"
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}"
-        MinHeight="500"
-        MinWidth="900"
+        MinHeight="660"
+        MinWidth="1000"
         ResizeMode="CanResizeWithGrip">
 
     <!--DataContext binding -->

@@ -32,14 +32,9 @@ namespace RDFNetwork.RBFApproximation
             }
         }
 
-        public double DerivativeFu()
-        {
-            return Output * (1 - Output);
-        }
-
         public double ErrorBackPropagationLinear( double expectedValue )
         {
-            return (Output - expectedValue);
+            return Output - expectedValue;
         }
 
         public double CalculateError( double expectedValue )
