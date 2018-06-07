@@ -39,8 +39,8 @@ namespace RDFNetwork.RBFClassification.ViewModel
 
         #region Privates
 
-        private List<Centroid4D> _centroids;
-        private List<SamplePoint4D> _samplePoints;
+        private List<Centroid> _centroids;
+        private List<SamplePoint> _samplePoints;
         private List<double> _networkOutput;
         private Classification _classification;
 
@@ -135,54 +135,9 @@ namespace RDFNetwork.RBFClassification.ViewModel
             for (var i = 0; i < _samplePoints.Count; i++)
             {
                 DataPoint dataPoint = new DataPoint();
-                double X = 0.0;
-                double Y = 0.0;
-                if (selectedPlot == 0)
-                {
-                    X = _samplePoints[i].X;
-                }
 
-                if (selectedPlot == 1)
-                {
-                    X = _samplePoints[i].Y;
-                }
-
-                if (selectedPlot == 2)
-                {
-                    X = _samplePoints[i].Z;
-                }
-
-                if (selectedPlot == 3)
-                {
-                    X = _samplePoints[i].V;
-                }
-
-                if (selectedPlot == selectedDataRange)
-                {
-                    selectedDataRange = 3;
-                }
-
-
-                if (selectedDataRange == 0)
-                {
-                    Y = _samplePoints[i].X;
-                }
-
-                if (selectedDataRange == 1)
-                {
-                    Y = _samplePoints[i].Y;
-                }
-
-                if (selectedDataRange == 2)
-                {
-                    Y = _samplePoints[i].Z;
-                }
-
-                if (selectedDataRange == 3)
-                {
-                    Y = _samplePoints[i].V;
-                }
-
+                double X = _samplePoints[i].Coordinates[selectedPlot];
+                double Y = _samplePoints[i].Coordinates[selectedDataRange];
 
                 dataPoint = new DataPoint(X,Y);
 
@@ -238,57 +193,15 @@ namespace RDFNetwork.RBFClassification.ViewModel
                     DataFieldY = "yData"
                 };
 
-
-
-
-                double X = 0;
-                double Y = 0;
                 DataPoint dataPoint = new DataPoint();
-                if ( selectedPlot == 0 )
-                {
-                    X = centroid.X;
-                }
-
-                if ( selectedPlot == 1 )
-                {
-                    X = centroid.Y;
-                }
-
-                if ( selectedPlot == 2 )
-                {
-                    X = centroid.Z;
-                }
-
-                if ( selectedPlot == 3 )
-                {
-                    X = centroid.V;
-                }
-
+                double X = centroid.Coordinates[selectedPlot];
+               
                 if ( selectedPlot == selectedDataRange )
                 {
                     selectedDataRange = 3;
                 }
 
-
-                if ( selectedDataRange == 0 )
-                {
-                    Y = centroid.X;
-                }
-
-                if ( selectedDataRange == 1 )
-                {
-                    Y = centroid.Y;
-                }
-
-                if ( selectedDataRange == 2 )
-                {
-                    Y = centroid.Z;
-                }
-
-                if ( selectedDataRange == 3 )
-                {
-                    Y = centroid.V;
-                }
+                double Y = centroid.Coordinates[selectedDataRange];
 
                 dataPoint = new DataPoint( X, Y);
 

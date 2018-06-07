@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Deployment.Internal;
 using System.Linq;
 using IAD_zadanie02;
 using IAD_zadanie02.KMeansClustering.Model;
@@ -10,8 +9,8 @@ namespace RDFNetwork.RBFClassification.Model
     public class Classification
     {
         private readonly Random random = new Random();
-        public List<SamplePoint4D> SamplePoints { get; set; } = SampleRepository.GetInputSamplePoints4D();
-        internal List<Centroid4D> Centroids { get; set; } = new List<Centroid4D>();
+        public List<SamplePoint> SamplePoints { get; set; } = SampleRepository.GetInputSamplePoints4D();
+        internal List<Centroid> Centroids { get; set; } = new List<Centroid>();
         private Neuron _neuron = new Neuron();
         private List<List<double>> hiddenLayerOutputs = new List<List<double>>();
         public List<double> TotalErrors = new List<double>();
@@ -46,22 +45,22 @@ namespace RDFNetwork.RBFClassification.Model
         {
             for (var i = 0; i < Centroids.Count; i++)
             {
-                 double distanceToNearestCentroid = MeanDistanceToKNearestCentroids( Centroids[i] );
+                double distanceToNearestCentroid = MeanDistanceToKNearestCentroids( Centroids[i] );
                 double sigma = alfa * distanceToNearestCentroid;
-                _beta.Add( ( 1/ (2*sigma*sigma) ) );
+                _beta.Add( ( 1 / ( 2 * sigma * sigma ) ) );
             }
         }
 
-        private double MeanDistanceToKNearestCentroids( Centroid4D centroid )
+        private double MeanDistanceToKNearestCentroids( Centroid centroid )
         {
             List<double> distances = new List<double>();
             foreach (var examinedCentorid in Centroids.Where( e => centroid.Id != e.Id ))
             {
-                distances.Add( CalculateDistanceBetweenCentroids( examinedCentorid, centroid ) );
+                distances.Add( Euclides.CalculateDistance( examinedCentorid, centroid ) );
             }
 
             distances.Sort();
-           
+
             return distances.Where( e => e <= distances[_k] ).Sum() / _k;
         }
 
@@ -87,13 +86,13 @@ namespace RDFNetwork.RBFClassification.Model
             }
         }
 
-        public double CalculateOutput( SamplePoint4D samplePoint4D )
+        public double CalculateOutput( SamplePoint samplePoint )
         {
             List<double> ho = new List<double>();
 
-            for ( int i = 0; i < _neuronNumber; i++ )
+            for (int i = 0; i < _neuronNumber; i++)
             {
-                ho.Add( BasisFunction( KMeansAlgorithm.CalculateDistance( samplePoint4D, Centroids[i] ), _beta[i] ) );
+                ho.Add( BasisFunction( Euclides.CalculateDistance( samplePoint, Centroids[i] ), _beta[i] ) );
             }
 
             _neuron.Inputs = ho;
@@ -112,7 +111,6 @@ namespace RDFNetwork.RBFClassification.Model
                 _neuron.CalculateOutput();
                 Outputs.Add( _neuron.Output );
             }
- 
         }
 
         private void Train( List<double> hiddenLayerOutput, double expected )
@@ -137,18 +135,10 @@ namespace RDFNetwork.RBFClassification.Model
                             Momentum * ( LearningRate * weightError - _prevOutputWeightError );
         }
 
-        private double CalculateDistanceBetweenCentroids( Centroid4D centroidA, Centroid4D centroidB )
-        {
-            return Math.Sqrt( Math.Pow( centroidA.X - centroidB.X, 2 ) +
-                              Math.Pow( centroidA.Y - centroidB.Y, 2 ) +
-                              Math.Pow( centroidA.Z - centroidB.Z, 2 ) +
-                              Math.Pow( centroidA.V - centroidB.V, 2 ) );
-        }
-
         private void InitOutputLayerWeights()
         {
             _neuron.Weights.Clear();
-            for ( var j = 0; j < hiddenLayerOutputs.First().Count; j++)
+            for (var j = 0; j < hiddenLayerOutputs.First().Count; j++)
             {
                 _neuron.Weights.Add( random.NextDouble() );
             }
@@ -159,12 +149,12 @@ namespace RDFNetwork.RBFClassification.Model
             hiddenLayerOutputs.Clear();
             for (var j = 0; j < SamplePoints.Count; j++)
             {
-                SamplePoint4D samplePoint4D = SamplePoints[j];
+                SamplePoint samplePoint = SamplePoints[j];
                 hiddenLayerOutputs.Add( new List<double>() );
                 for (int i = 0; i < _neuronNumber; i++)
                 {
                     hiddenLayerOutputs[j]
-                        .Add( BasisFunction( KMeansAlgorithm.CalculateDistance( samplePoint4D, Centroids[i] ),
+                        .Add( BasisFunction( Euclides.CalculateDistance( samplePoint, Centroids[i] ),
                             _beta[i] ) );
                 }
             }

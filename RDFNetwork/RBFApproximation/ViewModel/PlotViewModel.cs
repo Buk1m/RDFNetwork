@@ -26,7 +26,7 @@ namespace RDFNetwork
         #endregion
 
 
-        public void SetUpPlotModelData( List<Centroid1D> centroids, List<SamplePoint1D> samplePoints,
+        public void SetUpPlotModelData( List<Centroid> centroids, List<SamplePoint> samplePoints,
             List<double> networkOutput, RBFApproximation.Approximation app )
         {
             PlotModel.Series.Clear();
@@ -43,8 +43,8 @@ namespace RDFNetwork
 
         #region Privates
 
-        private List<Centroid1D> _centroids;
-        private List<SamplePoint1D> _samplePoints;
+        private List<Centroid> _centroids;
+        private List<SamplePoint> _samplePoints;
         private List<double> _networkOutput;
         private Approximation _app;
 
@@ -86,12 +86,11 @@ namespace RDFNetwork
                     DataFieldY = "yData"
                 };
 
-                IEnumerable<SamplePoint1D> sampleList =
+                IEnumerable<SamplePoint> sampleList =
                     _samplePoints.Where( sample => sample.NearsetPointId == centroid.Id );
                 foreach (var sample in sampleList)
                 {
-                    lineSerie.Points.Add( new DataPoint( sample.X, _app.CalculateOutput( sample ) ) );
-                   // Console.WriteLine( sample.X + " " + _app.CalculateOutput( sample ) );
+                    lineSerie.Points.Add( new DataPoint( sample.Coordinates.First(), _app.CalculateOutput( sample ) ) );
                 }
 
                 PlotModel.Series.Add( lineSerie );
@@ -111,8 +110,8 @@ namespace RDFNetwork
             };
 
             _centroids.ForEach( centroid =>
-                lineSerie.Points.Add( new DataPoint( centroid.X,
-                    _app.CalculateOutput( new SamplePoint1D( centroid.X ) ) ) ) );
+                lineSerie.Points.Add( new DataPoint( centroid.Coordinates.First(),
+                    _app.CalculateOutput( new SamplePoint( centroid.Coordinates.First() ) ) ) ) );
             PlotModel.Series.Add( lineSerie );
         }
 
@@ -133,7 +132,7 @@ namespace RDFNetwork
             for (var index = 0; index < _samplePoints.Count; index++)
             {
                 var sample = _samplePoints[index];
-                lineSerie.Points.Add( new DataPoint( sample.X,
+                lineSerie.Points.Add( new DataPoint( sample.Coordinates.First(),
                     SampleRepository.TrainSamples[index].ExpectedValues.First() ) );
             }
 
@@ -141,7 +140,7 @@ namespace RDFNetwork
         }
 
 
-        public void ShowSamples(bool flatten)
+        public void ShowSamples( bool flatten )
         {
             var lineSerie = new LineSeries
             {
@@ -155,14 +154,15 @@ namespace RDFNetwork
 
             foreach (var trainSample in SampleRepository.TrainSamples)
             {
-                lineSerie.Points.Add( new DataPoint( trainSample.Inputs[0], flatten ? 0 : trainSample.ExpectedValues[0] ) );
+                lineSerie.Points.Add( new DataPoint( trainSample.Inputs[0],
+                    flatten ? 0 : trainSample.ExpectedValues[0] ) );
             }
 
             PlotModel.Series.Add( lineSerie );
             PlotModel.InvalidatePlot( true );
         }
 
-        public void ShowGeneratedCentroids( List<SamplePoint1D> samplePoints, List<Centroid1D> centroids, bool flatten )
+        public void ShowGeneratedCentroids( List<SamplePoint> samplePoints, List<Centroid> centroids, bool flatten )
         {
             PlotModel.Series.Clear();
             var lineSerie = new LineSeries
@@ -176,12 +176,12 @@ namespace RDFNetwork
             };
 
 
-                centroids.ForEach( centroid => lineSerie.Points.Add( new DataPoint( centroid.X,
-                    flatten ? 0 : SampleRepository.TrainSamples[centroid.Expected].ExpectedValues.First() ) ) );
-            
+            centroids.ForEach( centroid => lineSerie.Points.Add( new DataPoint( centroid.Coordinates.First(),
+                flatten ? 0 : SampleRepository.TrainSamples[centroid.Expected].ExpectedValues.First() ) ) );
+
 
             PlotModel.Series.Add( lineSerie );
-            ShowSamples(flatten);
+            ShowSamples( flatten );
             PlotModel.InvalidatePlot( true );
 
             foreach (var centroid in centroids)
@@ -196,13 +196,13 @@ namespace RDFNetwork
                     DataFieldY = "yData"
                 };
 
-                IEnumerable<SamplePoint1D> sampleList =
+                IEnumerable<SamplePoint> sampleList =
                     samplePoints.Where( sample => sample.NearsetPointId == centroid.Id );
 
-                    foreach ( var sample in sampleList )
-                    {
-                        sampleSeries.Points.Add( new DataPoint( sample.X, flatten ? 0 : sample.Expected ) );
-                    }
+                foreach (var sample in sampleList)
+                {
+                    sampleSeries.Points.Add( new DataPoint( sample.Coordinates.First(), flatten ? 0 : sample.Expected ) );
+                }
 
                 PlotModel.Series.Add( sampleSeries );
                 PlotModel.InvalidatePlot( true );

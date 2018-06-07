@@ -11,8 +11,8 @@ namespace RDFNetwork.RBFApproximation
         private readonly Random random = new Random();
         private int _neuronNumber;
         private readonly List<double> _beta = new List<double>();
-        public List<SamplePoint1D> SamplePoints { get; set; } = SampleRepository.GetInputSamplePoints();
-        public List<Centroid1D> Centroids = new List<Centroid1D>();
+        public List<SamplePoint> SamplePoints { get; set; } = SampleRepository.GetInputSamplePoints();
+        public List<Centroid> Centroids = new List<Centroid>();
         private List<int> _excludedSampleIndexes = new List<int>();
         private Neuron _neuron = new Neuron();
         private List<List<double>> hiddenLayerOutputs = new List<List<double>>();
@@ -24,7 +24,7 @@ namespace RDFNetwork.RBFApproximation
 
         private int _k = 4;
 
-        public Approximation( int neuronNumber, double alfa)
+        public Approximation( int neuronNumber, double alfa )
         {
             _neuronNumber = neuronNumber;
             GenerateCentroids();
@@ -34,7 +34,7 @@ namespace RDFNetwork.RBFApproximation
 
         public void StuffDooer()
         {
-            Centroid1D._nextId = 0;
+            Centroid.ResetNextId();
             CalculateHiddenLayerOutputs();
             initOutputLayerWeights();
             TotalErrors.Clear();
@@ -44,7 +44,7 @@ namespace RDFNetwork.RBFApproximation
         {
             Outputs.Clear();
             var error = 0.0;
-            for ( var i = 0; i < hiddenLayerOutputs.Count; i++ )
+            for (var i = 0; i < hiddenLayerOutputs.Count; i++)
             {
                 _neuron.Inputs = hiddenLayerOutputs[i];
                 _neuron.CalculateOutput();
@@ -52,6 +52,7 @@ namespace RDFNetwork.RBFApproximation
                 Outputs.Add( _neuron.Output );
                 error += _neuron.CalculateError( SampleRepository.TrainSamples[i].ExpectedValues.First() );
             }
+
             TotalErrors.Add( error );
         }
 
@@ -59,7 +60,7 @@ namespace RDFNetwork.RBFApproximation
         {
             List<double> outputs = new List<double>();
             Outputs.Clear();
-            
+
             CalculateHiddenLayerOutputs();
             for (var i = 0; i < hiddenLayerOutputs.Count; i++)
             {
@@ -92,12 +93,12 @@ namespace RDFNetwork.RBFApproximation
             }
         }
 
-        private double MeanDistanceToKNearestCentroids( Centroid1D centroid )
+        private double MeanDistanceToKNearestCentroids( Centroid centroid )
         {
             List<double> distances = new List<double>();
             foreach (var examinedCentorid in Centroids.Where( e => centroid.Id != e.Id ))
             {
-                distances.Add( Math.Abs( examinedCentorid.X - centroid.X ) );
+                distances.Add( Math.Abs( examinedCentorid.Coordinates.First() - centroid.Coordinates.First() ) );
             }
 
             distances.Sort();
@@ -110,23 +111,23 @@ namespace RDFNetwork.RBFApproximation
             hiddenLayerOutputs.Clear();
             for (var j = 0; j < SamplePoints.Count; j++)
             {
-                SamplePoint1D samplePoint1D = SamplePoints[j];
+                SamplePoint samplePoint = SamplePoints[j];
                 hiddenLayerOutputs.Add( new List<double>() );
                 for (int i = 0; i < _neuronNumber; i++)
                 {
                     hiddenLayerOutputs[j]
-                        .Add( BasisFunction( CalculateDistance( samplePoint1D, Centroids[i] ), _beta[i] ) );
+                        .Add( BasisFunction( Euclides.CalculateDistance( samplePoint, Centroids[i] ), _beta[i] ) );
                 }
             }
         }
 
-        public double CalculateOutput( SamplePoint1D samplePoint1D )
+        public double CalculateOutput( SamplePoint samplePoint )
         {
             List<double> ho = new List<double>();
 
             for (int i = 0; i < _neuronNumber; i++)
             {
-                ho.Add( BasisFunction( CalculateDistance( samplePoint1D, Centroids[i] ), _beta[i] ) );
+                ho.Add( BasisFunction( Euclides.CalculateDistance( samplePoint, Centroids[i] ), _beta[i] ) );
             }
 
             _neuron.Inputs = ho;
@@ -167,6 +168,7 @@ namespace RDFNetwork.RBFApproximation
 
         private double BasisFunction( double radius, double beta )
         {
+            beta = 10;
             return Math.Exp( -beta * Math.Pow( radius, 2 ) );
         }
 
@@ -182,18 +184,19 @@ namespace RDFNetwork.RBFApproximation
                     choosenSampleIndex = random.Next( SamplePoints.Count );
                 } while (_excludedSampleIndexes.Contains( choosenSampleIndex ));
 
-                Centroids.Add( new Centroid1D( SamplePoints[choosenSampleIndex].X, choosenSampleIndex ) );
+                Centroids.Add(
+                    new Centroid( choosenSampleIndex, SamplePoints[choosenSampleIndex].Coordinates.First() ) );
                 _excludedSampleIndexes.Add( choosenSampleIndex );
             }
         }
 
-        private int GetTheNearestCentroidsId( SamplePoint1D samplePoint1D )
+        private int GetTheNearestCentroidsId( SamplePoint samplePoint )
         {
             int nearestCentroidId = Centroids.First().Id;
-            double nearestDistance = CalculateDistance( samplePoint1D, Centroids.First() );
+            double nearestDistance = Euclides.CalculateDistance( samplePoint, Centroids.First() );
             foreach (var centroid in Centroids)
             {
-                double distance = CalculateDistance( samplePoint1D, centroid );
+                double distance = Euclides.CalculateDistance( samplePoint, centroid );
                 if (distance < nearestDistance)
                 {
                     nearestCentroidId = centroid.Id;
@@ -202,11 +205,6 @@ namespace RDFNetwork.RBFApproximation
             }
 
             return nearestCentroidId;
-        }
-
-        private double CalculateDistance( SamplePoint1D samplePoint1D, Centroid1D centroid )
-        {
-            return Math.Abs( samplePoint1D.X - centroid.X );
         }
 
         #endregion

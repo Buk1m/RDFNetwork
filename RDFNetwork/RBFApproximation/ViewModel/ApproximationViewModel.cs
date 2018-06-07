@@ -137,8 +137,11 @@ namespace RDFNetwork.RBFApproximation.ViewModel
 
         private void AutoLearningTicker( object sender, EventArgs e )
         {
-            if (iterator++ > EpochsNumber)
+            iterator += EpochsNumber / 20;
+            if (iterator >= EpochsNumber)
                 _timer.Stop();
+
+            for (int i=0 ;i<EpochsNumber/20; i++ )
             _app.Learn();
             _plotModelViewModel.SetUpPlotModelData( _app.Centroids, _app.SamplePoints, _app.Outputs, _app );
             _errorPlotModelViewModel.SetUpPlotModelData( _app.TotalErrors );

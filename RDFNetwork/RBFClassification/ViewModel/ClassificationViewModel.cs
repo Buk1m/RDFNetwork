@@ -153,7 +153,7 @@ namespace RDFNetwork.RBFClassification.ViewModel
         {
             _classification = new Classification( NeuronNumber, Alfa, EpochsNumber );
 
-            Centroid1D._nextId = 0;
+            Centroid.ResetNextId();
             _classification.StuffDooer();
         }
 

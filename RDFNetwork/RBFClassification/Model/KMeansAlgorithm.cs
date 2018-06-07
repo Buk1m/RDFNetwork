@@ -9,8 +9,8 @@ namespace IAD_zadanie02.KMeansClustering.Model
     {
         #region Lists Of Points
 
-        public List<Centroid4D> Centroids { get; internal set; }
-        public List<SamplePoint4D> SamplePoints { get; internal set; }
+        public List<Centroid> Centroids { get; internal set; }
+        public List<SamplePoint> SamplePoints { get; internal set; }
 
         #endregion
 
@@ -18,7 +18,7 @@ namespace IAD_zadanie02.KMeansClustering.Model
 
         public KMeansAlgorithm()
         {
-            Centroids = new List<Centroid4D>();
+            Centroids = new List<Centroid>();
         }
 
         #endregion
@@ -39,11 +39,10 @@ namespace IAD_zadanie02.KMeansClustering.Model
                     choosenSampleIndex = Random.Next( SamplePoints.Count );
                 } while (_excludedSampleIndexes.Contains( choosenSampleIndex ));
 
-                Centroids.Add( new Centroid4D( SamplePoints[choosenSampleIndex] ) );
+                Centroids.Add( new Centroid( SamplePoints[choosenSampleIndex] ) );
                 _excludedSampleIndexes.Add( choosenSampleIndex );
             }
         }
-
 
         public void AssignSamplePointsToNearestCentroids()
         {
@@ -70,13 +69,13 @@ namespace IAD_zadanie02.KMeansClustering.Model
         private static readonly Random Random = new Random();
         private List<int> _excludedSampleIndexes = new List<int>();
 
-        private int GetTheNearestCentroidsId( SamplePoint4D samplePoint4D )
+        private int GetTheNearestCentroidsId( SamplePoint samplePoint )
         {
             int nearestCentroidId = Centroids.First().Id;
-            double nearestDistance = CalculateDistance( samplePoint4D, Centroids.First() );
+            double nearestDistance = Euclides.CalculateDistance( samplePoint, Centroids.First() );
             foreach (var centroid in Centroids)
             {
-                double distance = CalculateDistance( samplePoint4D, centroid );
+                double distance = Euclides.CalculateDistance( samplePoint, centroid );
                 if (distance < nearestDistance)
                 {
                     nearestCentroidId = centroid.Id;
@@ -87,48 +86,38 @@ namespace IAD_zadanie02.KMeansClustering.Model
             return nearestCentroidId;
         }
 
-        private void SetAverageCoordinates( Centroid4D centroid )
+        private void SetAverageCoordinates( Centroid centroid )
         {
             var samplePoints = SamplePoints.Where( point => point.NearsetPointId == centroid.Id ).ToArray();
             if (samplePoints.Length != 0)
             {
-                double averageX = 0.0;
-                double averageY = 0.0;
-                double averageZ = 0.0;
-                double averageV = 0.0;
+                List<double> averages = new List<double>();
+
+                for (var i = 0; i < samplePoints.First().Coordinates.Count; i++)
+                {
+                    averages.Add( 0.0 );
+                }
 
                 foreach (var samplePoint in samplePoints)
                 {
-                    averageX += samplePoint.X;
-                    averageY += samplePoint.Y;
-                    averageZ += samplePoint.Z;
-                    averageV += samplePoint.V;
+                    for (var i = 0; i < averages.Count; i++)
+                    {
+                        averages[i] += samplePoint.Coordinates[i];
+                    }
+
                 }
 
-                averageX /= samplePoints.Count();
-                averageY /= samplePoints.Count();
-                averageZ /= samplePoints.Count();
-                averageV /= samplePoints.Count();
+                for (var i = 0; i < averages.Count; i++)
+                {
+                    averages[i] /= samplePoints.Length;
+                }
 
-                MaxCentroidShift = CalculateDistance( new SamplePoint4D( averageX, averageY, averageZ, averageV ),
+                MaxCentroidShift = Euclides.CalculateDistance( new SamplePoint( averages ),
                     centroid );
 
-                centroid.X = averageX;
-                centroid.Y = averageY;
-                centroid.Z = averageZ;
-                centroid.V = averageV;
+                centroid.Coordinates = averages;
             }
         }
-
-
-        public double CalculateDistance( SamplePoint4D samplePoint4D, Centroid4D centroid )
-        {
-            return Math.Sqrt( Math.Pow( samplePoint4D.X - centroid.X, 2 ) +
-                              Math.Pow( samplePoint4D.Y - centroid.Y, 2 ) +
-                              Math.Pow( samplePoint4D.Z - centroid.Z, 2 ) +
-                              Math.Pow( samplePoint4D.V - centroid.V, 2 ) );
-        }
-
 
         #endregion
     }

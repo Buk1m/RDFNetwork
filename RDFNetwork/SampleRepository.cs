@@ -19,27 +19,24 @@ namespace RDFNetwork
             return sb.ToString();
         }
 
-        public static List<SamplePoint1D> GetInputSamplePoints()
+        public static List<SamplePoint> GetInputSamplePoints()
         {
-            List<SamplePoint1D> samplePoints = new List<SamplePoint1D>();
+            List<SamplePoint> samplePoints = new List<SamplePoint>();
             foreach (var trainSample in SampleRepository.TrainSamples)
             {
-                samplePoints.Add( new SamplePoint1D( trainSample.Inputs.First(), trainSample.ExpectedValues.First() ) );
-
-
-               // trainSample.Inputs.ForEach( input => samplePoints.Add( new SamplePoint1D( input ) ) );
+                samplePoints.Add( new SamplePoint( (float)trainSample.ExpectedValues.First(), trainSample.Inputs.First() ) );
             }
 
             return samplePoints;
         }
 
 
-        public static List<SamplePoint4D> GetInputSamplePoints4D()
+        public static List<SamplePoint> GetInputSamplePoints4D()
         {
-            List<SamplePoint4D> samplePoints = new List<SamplePoint4D>();
+            List<SamplePoint> samplePoints = new List<SamplePoint>();
             foreach (var trainSample in SampleRepository.TrainSamples)
             {
-                samplePoints.Add( new SamplePoint4D( trainSample.Inputs ) );
+                samplePoints.Add( new SamplePoint( trainSample.Inputs ) );
             }
 
             return samplePoints;
