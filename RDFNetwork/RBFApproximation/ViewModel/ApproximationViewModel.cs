@@ -83,7 +83,7 @@ namespace RDFNetwork.RBFApproximation.ViewModel
         private Approximation _app;
         private DispatcherTimer _timer;
         private int iterator = 0;
-        private bool TemporaryTemper = true;
+        private bool TemporaryTemper = false;
 
         public void Generate()
         {
