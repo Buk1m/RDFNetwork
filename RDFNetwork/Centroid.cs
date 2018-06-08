@@ -35,6 +35,16 @@ namespace RDFNetwork
             GenerateAreaColor();
         }
 
+        public Centroid( int expected, SamplePoint samplePoint ) : base( samplePoint.Coordinates )
+        { 
+            Expected = expected;
+
+            Id = _nextId++;
+            Rgb = new List<byte>();
+
+            GenerateAreaColor();
+        }
+
         public Centroid( int expected, params double[] coordinates ) : base( coordinates.ToList() )
         {
             Expected = expected;

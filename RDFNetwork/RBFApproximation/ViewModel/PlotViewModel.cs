@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using IAD_zadanie02;
 using OxyPlot;
 using OxyPlot.Axes;
-using OxyPlot.Wpf;
 using RDFNetwork.RBFApproximation;
 using LinearAxis = OxyPlot.Axes.LinearAxis;
 using LineSeries = OxyPlot.Series.LineSeries;
@@ -26,14 +24,13 @@ namespace RDFNetwork
         #endregion
 
 
-        public void SetUpPlotModelData( List<Centroid> centroids, List<SamplePoint> samplePoints,
-            List<double> networkOutput, RBFApproximation.Approximation app )
+        public void SetUpPlotModelData( Approximation app )
         {
             PlotModel.Series.Clear();
 
-            _centroids = centroids;
-            _samplePoints = samplePoints;
-            _networkOutput = networkOutput;
+            _centroids = app.Centroids;
+            _samplePoints = app.SamplePoints;
+            _networkOutput = app.Outputs;
             _app = app;
             CreateCentroidLineSerie();
             CreateSamplePointsLineSeries();
@@ -90,7 +87,7 @@ namespace RDFNetwork
                     _samplePoints.Where( sample => sample.NearsetPointId == centroid.Id );
                 foreach (var sample in sampleList)
                 {
-                    lineSerie.Points.Add( new DataPoint( sample.Coordinates.First(), _app.CalculateOutput( sample ) ) );
+                    lineSerie.Points.Add( new DataPoint( sample.Coordinates.First(), _app.CalculateNetworkOutput( sample ) ) );
                 }
 
                 PlotModel.Series.Add( lineSerie );
@@ -111,7 +108,7 @@ namespace RDFNetwork
 
             _centroids.ForEach( centroid =>
                 lineSerie.Points.Add( new DataPoint( centroid.Coordinates.First(),
-                    _app.CalculateOutput( new SamplePoint( centroid.Coordinates.First() ) ) ) ) );
+                    _app.CalculateNetworkOutput( new SamplePoint( centroid.Coordinates.First() ) ) ) ) );
             PlotModel.Series.Add( lineSerie );
         }
 

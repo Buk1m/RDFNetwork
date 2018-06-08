@@ -39,7 +39,7 @@ namespace RDFNetwork.RBFApproximation
 
         public double CalculateError( double expectedValue )
         {
-            return (double)1 / Inputs.Count * Math.Pow( (expectedValue - Output), 2 );
+            return (double) 2 * Math.Pow( (expectedValue - Output), 2 );
         }
     }
 }

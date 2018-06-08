@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Windows;
 using IAD_zadanie02;
-using IAD_zadanie02.KMeansClustering.Model;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
@@ -27,11 +28,9 @@ namespace RDFNetwork.RBFClassification.ViewModel
         public void SetUpPlotModelData( Classification classification, int selectedPlot, int selectedDataRange )
         {
             PlotModel.Series.Clear();
-
             _centroids = classification.Centroids;
             _samplePoints = classification.SamplePoints;
             _networkOutput = classification.Outputs;
-            _classification = classification;
             CreateCentroidLineSerie( selectedPlot, selectedDataRange );
             CreateSamplePointsLineSeries( selectedPlot, selectedDataRange );
         }
@@ -42,7 +41,7 @@ namespace RDFNetwork.RBFClassification.ViewModel
         private List<Centroid> _centroids;
         private List<SamplePoint> _samplePoints;
         private List<double> _networkOutput;
-        private Classification _classification;
+
 
         public void SetUpModel()
         {
@@ -66,22 +65,24 @@ namespace RDFNetwork.RBFClassification.ViewModel
                 MinorGridlineStyle = LineStyle.Dot,
             };
             PlotModel.Axes.Add( axisY );
-
-            var axisMarginRight = new LinearAxis()
-            {
-                Position = AxisPosition.Right,
-                FontSize = 0
-            };
-            PlotModel.Axes.Add( axisMarginRight );
         }
 
-        private void CreateSamplePointsLineSeries( int selectedPlot, int selectedDataRange )
+        public void CreateSamplePointsLineSeries( int selectedPlot, int selectedDataRange )
         {
             var ones = new LineSeries
             {
                 LineStyle = LineStyle.None,
                 MarkerSize = 3,
                 MarkerFill = OxyColor.FromRgb( 0, 0, 255 ),
+                MarkerType = MarkerType.Circle,
+                DataFieldX = "xData",
+                DataFieldY = "yData"
+            };
+            var none = new LineSeries
+            {
+                LineStyle = LineStyle.None,
+                MarkerSize = 3,
+                MarkerFill = OxyColor.FromRgb( 127, 127, 50 ),
                 MarkerType = MarkerType.Circle,
                 DataFieldX = "xData",
                 DataFieldY = "yData"
@@ -131,55 +132,105 @@ namespace RDFNetwork.RBFClassification.ViewModel
                 DataFieldX = "xData",
                 DataFieldY = "yData"
             };
-
+            int[,] errorMatrix = new int[3, 3];
             for (var i = 0; i < _samplePoints.Count; i++)
             {
                 DataPoint dataPoint = new DataPoint();
 
                 double X = _samplePoints[i].Coordinates[selectedPlot];
-                double Y = _samplePoints[i].Coordinates[selectedDataRange];
-
-                dataPoint = new DataPoint(X,Y);
-
-                if (_networkOutput[i] < 1.5)
+                if ( selectedPlot == selectedDataRange )
                 {
-                    if (SampleRepository.TrainSamples[i].ExpectedValues.First() >= 2.5)
-                        mistejkenThree.Points.Add( dataPoint );
-                    else if (SampleRepository.TrainSamples[i].ExpectedValues.First() >= 1.5)
-                        mistejkenTwo.Points.Add( dataPoint );
-
-                    ones.Points.Add( dataPoint );
+                    selectedDataRange = 3;
                 }
-                else if (_networkOutput[i] < 2.5)
+                double Y = _samplePoints[i].Coordinates[selectedDataRange];
+    
+                dataPoint = new DataPoint(X,Y);
+                if (_networkOutput.Any())
                 {
-                    if (SampleRepository.TrainSamples[i].ExpectedValues.First() >= 2.5)
-                        mistejkenThree.Points.Add( dataPoint );
-                    else if (SampleRepository.TrainSamples[i].ExpectedValues.First() < 1.5)
-                        mistejkenOne.Points.Add( dataPoint );
+                    if (_networkOutput[i] < 1.5)
+                    {
+                        if (SampleRepository.TrainSamples[i].ExpectedValues.First() >= 2.5)
+                        {
+                            errorMatrix[0, 2]++;
 
-                    twos.Points.Add( dataPoint );
+                            mistejkenThree.Points.Add( dataPoint );
+                        }
+                        else if (SampleRepository.TrainSamples[i].ExpectedValues.First() >= 1.5)
+                        {
+                            errorMatrix[0, 1]++;
+                            mistejkenTwo.Points.Add( dataPoint );
+                        }
+
+                        ones.Points.Add( dataPoint );
+                        errorMatrix[0, 0]++;
+                    }
+                    else if (_networkOutput[i] < 2.5)
+                    {
+                        if (SampleRepository.TrainSamples[i].ExpectedValues.First() >= 2.5)
+                        {
+                            errorMatrix[1, 2]++;
+                            mistejkenThree.Points.Add( dataPoint );
+
+                        }
+                        else if (SampleRepository.TrainSamples[i].ExpectedValues.First() < 1.5)
+                        {
+                            mistejkenOne.Points.Add( dataPoint );
+                            errorMatrix[1, 0]++;
+                        }
+
+                        twos.Points.Add( dataPoint );
+                        errorMatrix[1, 1]++;
+                    }
+                    else
+                    {
+                        if (SampleRepository.TrainSamples[i].ExpectedValues.First() < 1.5)
+                        {
+                            errorMatrix[2, 0]++;
+                            mistejkenOne.Points.Add( dataPoint );
+                        }
+                        else if (SampleRepository.TrainSamples[i].ExpectedValues.First() < 2.5)
+                        {
+                            mistejkenTwo.Points.Add( dataPoint );
+                            errorMatrix[2, 1]++;
+                        }
+
+
+                        threes.Points.Add( dataPoint );
+                        errorMatrix[2, 2]++;
+                    }
+
                 }
                 else
                 {
-                    if (SampleRepository.TrainSamples[i].ExpectedValues.First() < 1.5)
-                        mistejkenOne.Points.Add( dataPoint );
-
-                    else if (SampleRepository.TrainSamples[i].ExpectedValues.First() < 2.5)
-                        mistejkenTwo.Points.Add( dataPoint );
-
-                    threes.Points.Add( dataPoint );
+                    none.Points.Add(dataPoint);
                 }
             }
+            if ( _networkOutput.Any() )
+            {
+                StringBuilder chceSpac = new StringBuilder();
+                for ( int j = 0; j < 3; j++ )
+                {
+                    for ( int k = 0; k < 3; k++ )
+                    {
+                        chceSpac.Append( errorMatrix[j, k] );
+                        chceSpac.Append( "\t" );
+                    }
+                    chceSpac.Append( "\n" );
 
+                }
+
+                MessageBox.Show( chceSpac.ToString() );
+            }
             PlotModel.Series.Add( mistejkenOne );
             PlotModel.Series.Add( mistejkenTwo );
             PlotModel.Series.Add( mistejkenThree );
             PlotModel.Series.Add( ones );
             PlotModel.Series.Add( twos );
             PlotModel.Series.Add( threes );
+            PlotModel.Series.Add( none );
         }
 
-        private void CreateCentroidLineSerie(int selectedPlot, int selectedDataRange)
+        public void CreateCentroidLineSerie(int selectedPlot, int selectedDataRange)
         {
             foreach (var centroid in _centroids)
             {
@@ -207,8 +258,6 @@ namespace RDFNetwork.RBFClassification.ViewModel
 
                 lineSerie.Points.Add( dataPoint );
                 PlotModel.Series.Add( lineSerie );
-
-
 
             }
         }

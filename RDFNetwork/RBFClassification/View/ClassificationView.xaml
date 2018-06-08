@@ -20,18 +20,27 @@
         <!-- Options -->
         <StackPanel Grid.Column="0">
 
-            <!-- OpenFile Button -->
-            <Button Margin="20 20 20 10" Content="Open file" Command="{Binding OpenFileClick}" />
-
-            <!-- Open in editor -->
-            <Button Background="Transparent" Command="{Binding OpenInTextEditorClick}" Margin="20 0 20 5">
+            <Button Margin="20 15 20 10" Content="Train file" Command="{Binding OpenTrainFileClick}" />
+            <Button Background="Transparent" Command="{Binding OpenInTextEditorClick}" Margin="20 0 20 0">
                 <Button.Template>
                     <ControlTemplate>
-                        <TextBlock Foreground="Black" Height="32" MaxHeight="32" TextWrapping="WrapWithOverflow"
-                                   TextAlignment="Center" Text="{Binding FileName}" />
+                        <TextBlock Foreground="Black" Height="26" MaxHeight="26" TextWrapping="WrapWithOverflow"
+                                   TextAlignment="Center" Text="{Binding TrainFileName}" />
                     </ControlTemplate>
                 </Button.Template>
             </Button>
+            <Button Margin="20 10 20 10" Content="Test file" Command="{Binding OpenTestFileClick}" />
+
+            <!-- Open in editor -->
+            <Button Background="Transparent" Command="{Binding OpenInTextEditorClick}" Margin="20 0 20 0">
+                <Button.Template>
+                    <ControlTemplate>
+                        <TextBlock Foreground="Black" Height="26" MaxHeight="26" TextWrapping="WrapWithOverflow"
+                                   TextAlignment="Center" Text="{Binding TestFileName}" />
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
 
             <!-- Settings -->
             <TextBlock FontWeight="Bold" Margin="20 20 20 0" TextAlignment="Center">Learning rate:</TextBlock>
@@ -81,8 +90,10 @@
 
             </Border>
             <!-- Approximate button -->
-            <Button Margin="20 30 20 10" Content="Classify" Command="{Binding ApproximateClick}" />
-            <Button Margin="20 10 20 10" Content="Plot" Command="{Binding DoStuffClick}" />
+            <Button Margin="20 15 20 5" Content="Classify" Command="{Binding ApproximateClick}" />
+            <Button Margin="20 5 20 5" Content="Plot" Command="{Binding DoStuffClick}" />
+            <Button Margin="20 5 20 5" Content="Kmeans" Command="{Binding Kmeans}" />
+            <Button Margin="20 5 20 5" Content="Generate" Command="{Binding SomeButtonJustToldMeTheWorldIsGonnaRollme}" />
         </StackPanel>
         <Grid Grid.Column="1">
             <TabControl>

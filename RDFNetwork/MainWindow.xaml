@@ -3,9 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:RDFNetwork"
         xmlns:viewmodel="clr-namespace:RDFNetwork"
-        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         WindowStyle="None"
         WindowStartupLocation="CenterScreen"
@@ -16,7 +14,6 @@
         xmlns:ApproximationVM="clr-namespace:RDFNetwork.RBFApproximation.ViewModel"        
         xmlns:ClassificationV="clr-namespace:RDFNetwork.RBFClassification.View"
         xmlns:ClassificationVM="clr-namespace:RDFNetwork.RBFClassification.ViewModel"
-        xmlns:oxy="http://oxyplot.org/wpf"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
         TextElement.FontSize="13"
@@ -24,8 +21,8 @@
         TextOptions.TextRenderingMode="Auto"
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}"
-        MinHeight="660"
-        MinWidth="1000"
+        MinHeight="860"
+        MinWidth="1280"
         ResizeMode="CanResizeWithGrip">
 
     <!--DataContext binding -->
@@ -130,14 +127,7 @@
                     <TextBlock Margin="10 0 0 0" Text="Classification" VerticalAlignment="Center" />
                 </DockPanel>
             </Button>
-            <Button Padding="0" HorizontalContentAlignment="Stretch" Height="50" BorderBrush="Transparent"
-                    Background="Transparent" Foreground="AliceBlue">
-                <DockPanel>
-                    <materialDesign:PackIcon Margin="10 0 0 0" Kind="Numeric3Box" Width="30" Height="30"
-                                             HorizontalAlignment="Left" />
-                    <TextBlock Margin="10 0 0 0" Text="Third" VerticalAlignment="Center" />
-                </DockPanel>
-            </Button>
+
         </StackPanel>
 
     </Grid>

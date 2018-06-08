@@ -5,7 +5,7 @@ namespace RDFNetwork.Commands
 {
     public class RelayCommand : ICommand
     {
-        #region constructors
+        #region Constructors
 
         public RelayCommand( Action execute ) : this( execute, null )
         {
@@ -48,7 +48,7 @@ namespace RDFNetwork.Commands
 
         #endregion
 
-        #region private
+        #region Private
 
         private readonly Action _execute;
         private readonly Func<bool> _canExecute;

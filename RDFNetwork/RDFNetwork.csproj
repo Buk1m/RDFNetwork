@@ -100,6 +100,7 @@
     <Compile Include="RBFClassification\Model\KMeansAlgorithm.cs" />
     <Compile Include="RBFClassification\Model\Neuron.cs" />
     <Compile Include="RBFClassification\ViewModel\ClassificationViewModel.cs" />
+    <Compile Include="RBFViewModel.cs" />
     <Compile Include="SamplePoint.cs" />
     <Compile Include="RBFApproximation\ViewModel\ErrorPlotViewModel.cs" />
     <Compile Include="RBFApproximation\ViewModel\PlotViewModel.cs" />

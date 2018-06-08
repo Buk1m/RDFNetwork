@@ -1,11 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Media;
-using IAD_zadanie02;
 using OxyPlot;
 using OxyPlot.Axes;
-using OxyPlot.Wpf;
-using RDFNetwork.RBFApproximation;
 using LinearAxis = OxyPlot.Axes.LinearAxis;
 using LineSeries = OxyPlot.Series.LineSeries;
 
@@ -24,9 +19,10 @@ namespace RDFNetwork
 
         #endregion
 
-        public void SetUpPlotModelData( List<double> totalErrors )
+        public void SetUpPlotModelData( List<double> totalErrors, List<double> totalTestErrors )
         {
             _totalErrors = totalErrors;
+            _totalTestErrors = totalTestErrors;
             PlotModel.Series.Clear();
             CreateSamplePointsLineSeries();
         }
@@ -34,6 +30,7 @@ namespace RDFNetwork
         #region Privates
 
         private List<double> _totalErrors;
+        private List<double> _totalTestErrors;
 
         public void SetUpModel()
         {
@@ -57,12 +54,6 @@ namespace RDFNetwork
                 MinorGridlineStyle = LineStyle.Dot,
             };
             PlotModel.Axes.Add( axisY );
-            var axisMarginRight = new LinearAxis()
-            {
-                Position = AxisPosition.Right,
-                FontSize = 0
-            };
-            PlotModel.Axes.Add( axisMarginRight );
         }
 
         private void CreateSamplePointsLineSeries()
@@ -74,7 +65,20 @@ namespace RDFNetwork
                 DataFieldX = "xData",
                 DataFieldY = "yData"
             };
+            var testLineSerie = new LineSeries
+            {
+                LineStyle = LineStyle.Solid,
+                Color = OxyColor.FromRgb( 0, 255, 0 ),
+                DataFieldX = "xData",
+                DataFieldY = "yData"
+            };
 
+
+            for (var i = 0; i < _totalTestErrors.Count; i++)
+            {
+                var error = _totalTestErrors[i];
+                testLineSerie.Points.Add( new DataPoint( i, error ) );
+            }
 
             for (var i = 0; i < _totalErrors.Count; i++)
             {
@@ -83,6 +87,7 @@ namespace RDFNetwork
             }
 
             PlotModel.Series.Add( lineSerie );
+            PlotModel.Series.Add( testLineSerie );
         }
     }
 

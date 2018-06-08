@@ -8,52 +8,57 @@ namespace RDFNetwork.RBFApproximation
 {
     public class Approximation
     {
-        private readonly Random random = new Random();
-        private int _neuronNumber;
-        private readonly List<double> _beta = new List<double>();
-        public List<SamplePoint> SamplePoints { get; set; } = SampleRepository.GetInputSamplePoints();
-        public List<Centroid> Centroids = new List<Centroid>();
-        private List<int> _excludedSampleIndexes = new List<int>();
-        private Neuron _neuron = new Neuron();
-        private List<List<double>> hiddenLayerOutputs = new List<List<double>>();
-        public List<double> TotalErrors = new List<double>();
-        public double LearningRate = 0.05;
-        public double Momentum = 0.1;
-        private double _prevOutputWeightError;
+        // Data
+        public List<SamplePoint> SamplePoints { get; set; }
+        public List<Centroid> Centroids { get; } = new List<Centroid>();
+        public List<double> TotalErrors { get; } = new List<double>();
+        public List<double> TotalTestErrors { get; } = new List<double>();
         public List<double> Outputs { get; } = new List<double>();
 
-        private int _k = 4;
+        // Network Settings
+        public double LearningRate { get; internal set; }
+        public double Momentum { get; internal set; }
+        public int HiddenNeuronsNumber { get; internal set; }
+        public int NeighbourNumber { get; internal set; }
 
-        public Approximation( int neuronNumber, double alfa )
+        public void SetupAproximationAlgorithm()
         {
-            _neuronNumber = neuronNumber;
-            GenerateCentroids();
-            AssignSamplePointsToNearestCentroids();
-            CalculateBetaForEachCentroid( alfa );
-        }
-
-        public void StuffDooer()
-        {
+            _prevOutputWeightError = 0;
             Centroid.ResetNextId();
             CalculateHiddenLayerOutputs();
-            initOutputLayerWeights();
+            InitOutputLayerWeights();
             TotalErrors.Clear();
+            TotalTestErrors.Clear();
         }
 
         public void Learn()
         {
             Outputs.Clear();
-            var error = 0.0;
-            for (var i = 0; i < hiddenLayerOutputs.Count; i++)
+            double error = 0.0;
+            double testError = 0.0;
+            for (int i = 0; i < _hiddenLayerOutputs.Count; i++)
             {
-                _neuron.Inputs = hiddenLayerOutputs[i];
+                _neuron.Inputs = _hiddenLayerOutputs[i];
                 _neuron.CalculateOutput();
                 Train( SampleRepository.TrainSamples[i].ExpectedValues.First() );
                 Outputs.Add( _neuron.Output );
+            }
+
+            for (int i = 0; i < _hiddenLayerOutputs.Count; i++)
+            {
+                _neuron.Inputs = _hiddenLayerOutputs[i];
+                _neuron.CalculateOutput();
                 error += _neuron.CalculateError( SampleRepository.TrainSamples[i].ExpectedValues.First() );
             }
 
-            TotalErrors.Add( error );
+            for ( int i = 0; i < SampleRepository.TestSamples.Count; i++ )
+            { 
+                CalculateNetworkOutput( new SamplePoint( SampleRepository.TestSamples[i].Inputs ) );
+            testError += _neuron.CalculateError( SampleRepository.TestSamples[i].ExpectedValues.First() );
+            }
+
+            TotalErrors.Add( error/ _hiddenLayerOutputs.Count );
+            TotalTestErrors.Add( testError/ SampleRepository.TestSamples.Count );
         }
 
         public List<double> DoStuffer()
@@ -62,9 +67,9 @@ namespace RDFNetwork.RBFApproximation
             Outputs.Clear();
 
             CalculateHiddenLayerOutputs();
-            for (var i = 0; i < hiddenLayerOutputs.Count; i++)
+            for (var i = 0; i < _hiddenLayerOutputs.Count; i++)
             {
-                _neuron.Inputs = hiddenLayerOutputs[i];
+                _neuron.Inputs = _hiddenLayerOutputs[i];
                 _neuron.CalculateOutput();
                 outputs.Add( _neuron.Output );
                 Outputs.Add( _neuron.Output );
@@ -81,16 +86,57 @@ namespace RDFNetwork.RBFApproximation
             }
         }
 
-        #region Private Members
-
-        private void CalculateBetaForEachCentroid( double alfa )
+        public void GenerateCentroids()
         {
+            Centroids.Clear();
+            List<int> excludedSampleIndexes = new List<int>();
+            for (int i = 0; i < HiddenNeuronsNumber; i++)
+            {
+                int choosenSampleIndex;
+
+                do
+                {
+                    choosenSampleIndex = Random.Next( SamplePoints.Count );
+                } while (excludedSampleIndexes.Contains( choosenSampleIndex ));
+
+                Centroids.Add(
+                    new Centroid( choosenSampleIndex, SamplePoints[choosenSampleIndex] ) );
+                excludedSampleIndexes.Add( choosenSampleIndex );
+            }
+        }
+
+        public double CalculateNetworkOutput( SamplePoint samplePoint )
+        {
+            List<double> hiddenLayerOutput = new List<double>();
+
+            for (int i = 0; i < HiddenNeuronsNumber; i++)
+            {
+                hiddenLayerOutput.Add( BasisFunction( Euclides.CalculateDistance( samplePoint, Centroids[i] ),
+                    _betas[i] ) );
+            }
+
+            _neuron.Inputs = hiddenLayerOutput;
+            _neuron.CalculateOutput();
+            return _neuron.Output;
+        }
+
+        public void CalculateBetaForEachCentroid( double alfa )
+        {
+            _betas.Clear();
             for (var i = 0; i < Centroids.Count; i++)
             {
                 double distanceToNearestCentroid = MeanDistanceToKNearestCentroids( Centroids[i] );
-                double sigma = alfa * distanceToNearestCentroid;
-                _beta.Add( 1 / ( 2 * sigma * sigma ) );
+                double sigma = distanceToNearestCentroid;
+                _betas.Add( alfa * ( 1 / ( 2 * sigma * sigma ) ) );
             }
+        }
+
+        #region Private Members
+
+        // Methods
+        private static double BasisFunction( double radius, double beta )
+        {
+            return Math.Exp( -beta * Math.Pow( radius, 2 ) );
         }
 
         private double MeanDistanceToKNearestCentroids( Centroid centroid )
@@ -98,57 +144,40 @@ namespace RDFNetwork.RBFApproximation
             List<double> distances = new List<double>();
             foreach (var examinedCentorid in Centroids.Where( e => centroid.Id != e.Id ))
             {
-                distances.Add( Math.Abs( examinedCentorid.Coordinates.First() - centroid.Coordinates.First() ) );
+                distances.Add( Euclides.CalculateDistance( examinedCentorid, centroid ) );
             }
 
             distances.Sort();
 
-            return distances.Where( e => e < distances[_k] ).Sum() / _k;
+            return distances.Where( e => e <= distances[NeighbourNumber-1] ).Sum() / NeighbourNumber;
         }
 
         private void CalculateHiddenLayerOutputs()
         {
-            hiddenLayerOutputs.Clear();
+            _hiddenLayerOutputs.Clear();
             for (var j = 0; j < SamplePoints.Count; j++)
             {
                 SamplePoint samplePoint = SamplePoints[j];
-                hiddenLayerOutputs.Add( new List<double>() );
-                for (int i = 0; i < _neuronNumber; i++)
+                _hiddenLayerOutputs.Add( new List<double>() );
+                for (int i = 0; i < HiddenNeuronsNumber; i++)
                 {
-                    hiddenLayerOutputs[j]
-                        .Add( BasisFunction( Euclides.CalculateDistance( samplePoint, Centroids[i] ), _beta[i] ) );
+                    _hiddenLayerOutputs[j]
+                        .Add( BasisFunction( Euclides.CalculateDistance( samplePoint, Centroids[i] ), _betas[i] ) );
                 }
             }
         }
 
-        public double CalculateOutput( SamplePoint samplePoint )
-        {
-            List<double> ho = new List<double>();
-
-            for (int i = 0; i < _neuronNumber; i++)
-            {
-                ho.Add( BasisFunction( Euclides.CalculateDistance( samplePoint, Centroids[i] ), _beta[i] ) );
-            }
-
-            _neuron.Inputs = ho;
-            _neuron.CalculateOutput();
-            return _neuron.Output;
-        }
-
         private void Train( double expected )
         {
-            // Output neuron deltas
             double outputError = _neuron.ErrorBackPropagationLinear( expected );
 
-            // Update output neuron weights
-            double weightError = 0;
-            for (var j = 0; j < _neuron.Weights.Count; j++)
+            double weightError = 0.0;
+            for (int j = 0; j < _neuron.Weights.Count; j++)
             {
                 weightError = outputError * _neuron.Inputs[j];
 
                 _neuron.Weights[j] -= LearningRate * weightError +
                                       Momentum * ( LearningRate * weightError - _prevOutputWeightError );
-
 
                 _prevOutputWeightError = LearningRate * weightError;
             }
@@ -157,36 +186,13 @@ namespace RDFNetwork.RBFApproximation
                             Momentum * ( LearningRate * weightError - _prevOutputWeightError );
         }
 
-        private void initOutputLayerWeights()
+        private void InitOutputLayerWeights()
         {
+            _neuron.Bias = 1;
             _neuron.Weights.Clear();
-            for (var j = 0; j < hiddenLayerOutputs.First().Count; j++)
+            for (var j = 0; j < HiddenNeuronsNumber; j++)
             {
-                _neuron.Weights.Add( random.NextDouble() );
-            }
-        }
-
-        private double BasisFunction( double radius, double beta )
-        {
-            beta = 10;
-            return Math.Exp( -beta * Math.Pow( radius, 2 ) );
-        }
-
-        public void GenerateCentroids()
-        {
-            Centroids.Clear();
-            for (int i = 0; i < _neuronNumber; i++)
-            {
-                int choosenSampleIndex;
-
-                do
-                {
-                    choosenSampleIndex = random.Next( SamplePoints.Count );
-                } while (_excludedSampleIndexes.Contains( choosenSampleIndex ));
-
-                Centroids.Add(
-                    new Centroid( choosenSampleIndex, SamplePoints[choosenSampleIndex].Coordinates.First() ) );
-                _excludedSampleIndexes.Add( choosenSampleIndex );
+                _neuron.Weights.Add( Random.NextDouble() );
             }
         }
 
@@ -194,6 +200,7 @@ namespace RDFNetwork.RBFApproximation
         {
             int nearestCentroidId = Centroids.First().Id;
             double nearestDistance = Euclides.CalculateDistance( samplePoint, Centroids.First() );
+
             foreach (var centroid in Centroids)
             {
                 double distance = Euclides.CalculateDistance( samplePoint, centroid );
@@ -206,6 +213,14 @@ namespace RDFNetwork.RBFApproximation
 
             return nearestCentroidId;
         }
+
+        // Variables
+        private readonly Neuron _neuron = new Neuron();
+        private readonly List<List<double>> _hiddenLayerOutputs = new List<List<double>>();
+        private readonly List<double> _betas = new List<double>();
+        private double _prevOutputWeightError;
+
+        private static readonly Random Random = new Random();
 
         #endregion
     }

@@ -16,14 +16,23 @@
         <StackPanel Grid.Column="0">
 
             <!-- OpenFile Button -->
-            <Button Margin="20 20 20 10" Content="Open file" Command="{Binding OpenFileClick}" />
-
-            <!-- Open in editor -->
-            <Button Background="Transparent" Command="{Binding OpenInTextEditorClick}" Margin="20 0 20 5">
+            <Button Margin="20 15 20 10" Content="Train file" Command="{Binding OpenTrainFileClick}" />
+            <Button Background="Transparent" Command="{Binding OpenInTextEditorClick}" Margin="20 0 20 0">
                 <Button.Template>
                     <ControlTemplate>
-                        <TextBlock Foreground="Black" Height="32" MaxHeight="32" TextWrapping="WrapWithOverflow"
-                                   TextAlignment="Center" Text="{Binding FileName}" />
+                        <TextBlock Foreground="Black" Height="26" MaxHeight="26" TextWrapping="WrapWithOverflow"
+                                   TextAlignment="Center" Text="{Binding TrainFileName}" />
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Button Margin="20 10 20 10" Content="Test file" Command="{Binding OpenTestFileClick}" />
+
+            <!-- Open in editor -->
+            <Button Background="Transparent" Command="{Binding OpenInTextEditorClick}" Margin="20 0 20 0">
+                <Button.Template>
+                    <ControlTemplate>
+                        <TextBlock Foreground="Black" Height="26" MaxHeight="26" TextWrapping="WrapWithOverflow"
+                                   TextAlignment="Center" Text="{Binding TestFileName}" />
                     </ControlTemplate>
                 </Button.Template>
             </Button>
@@ -31,20 +40,30 @@
             <!-- Settings -->
             <TextBlock FontWeight="Bold" Margin="20 20 20 0" TextAlignment="Center">Learning rate:</TextBlock>
             <TextBox HorizontalContentAlignment="Center" Margin="40 0 40 10"
-                     Text="{Binding LerningRate, StringFormat=N4}" />
+                     Text="{Binding LerningRate, StringFormat=N3}" />
             <TextBlock FontWeight="Bold" Margin="20 10 20 0" TextAlignment="Center">Momentum:</TextBlock>
-            <TextBox HorizontalContentAlignment="Center" Margin="40 0 40 10" Text="{Binding Momentum, StringFormat=N4}" />
+            <TextBox HorizontalContentAlignment="Center" Margin="40 0 40 10" Text="{Binding Momentum, StringFormat=N3}" />
             <TextBlock FontWeight="Bold" Margin="20 10 20 0" TextAlignment="Center">Alfa:</TextBlock>
             <TextBox HorizontalContentAlignment="Center" Margin="40 0 40 10" Text="{Binding Alfa, StringFormat=N2}" />
             <TextBlock FontWeight="Bold" Margin="20 10 20 0" TextAlignment="Center">Number of neurons:</TextBlock>
             <xctk:IntegerUpDown Width="60" Margin="10 5 0 0" Value="{Binding NeuronNumber}" />
             <TextBlock FontWeight="Bold" Margin="20 20 20 0" TextAlignment="Center">Number of epochs:</TextBlock>
             <xctk:IntegerUpDown Width="60" Margin="10 5 0 0" Value="{Binding EpochsNumber}" />
+            <TextBlock FontWeight="Bold" Margin="20 20 20 0" TextAlignment="Center">Number of neighbours:</TextBlock>
+            <xctk:IntegerUpDown Width="60" Margin="10 5 0 0" Value="{Binding NeighbourNumber}" />
+            <TextBlock FontWeight="Bold" Margin="20 20 20 0" TextAlignment="Center">Animation Step:</TextBlock>
+            <xctk:IntegerUpDown Width="60" Margin="10 5 0 0" Value="{Binding AnimationStep}" />
+            <StackPanel  Margin="15" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock FontWeight="Bold"  TextAlignment="Center" Margin="0 0 10 0">Flatten:</TextBlock>
+                <CheckBox Padding="0" Margin="0" IsChecked="{Binding Flatten}"></CheckBox>
+            </StackPanel>
 
+
+         
             <!-- Approximate button -->
-            <Button Margin="20 30 20 10" Content="Approximate" Command="{Binding ApproximateClick}" />
-            <Button Margin="20 10 20 10" Content="Generate" Command="{Binding GenerateClick}" />
-            <Button Margin="20 10 20 10" Content="Plot" Command="{Binding DoStuffClick}" />
+            <Button Margin="20 0 20 10" Content="Approximate" Command="{Binding ApproximateClick}" />
+            <Button Margin="20 3 20 10" Content="Generate" Command="{Binding GenerateClick}" />
+            <Button Margin="20 3 20 10" Content="Plot" Command="{Binding DoStuffClick}" />
         </StackPanel>
         <Grid Grid.Column="1">
             <TabControl>

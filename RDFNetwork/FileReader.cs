@@ -13,14 +13,14 @@ namespace RDFNetwork
         {
             List<Sample> samples = new List<Sample>();
             StreamReader dataStream = new StreamReader( pathToFile );
-            string dataLine;
             FileInfo fileInfo = new FileInfo( pathToFile );
 
             if (!fileInfo.Exists) throw new FileNotFoundException( "File not found." );
-            if (fileInfo.Length == 0) throw new FormatException( "File cannot be empty." );
+            if (fileInfo.Length == 0) throw new FormatException( "File can't be empty." );
 
             try
             {
+                string dataLine;
                 while (( dataLine = dataStream.ReadLine() ) != null)
                 {
                     List<double> doubles = dataLine.Split( ' ' )

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -14,21 +13,28 @@ namespace RDFNetwork.RBFApproximation.ViewModel
 {
     class ApproximationViewModel : BaseViewModel
     {
+        #region Constructor
+
         public ApproximationViewModel()
         {
-            OpenFileClick = new RelayCommand( OpenFile );
+            _approximation = new Approximation();
+            OpenTrainFileClick = new RelayCommand( OpenTrainFile );
+            OpenTestFileClick = new RelayCommand( OpenTestFile );
             OpenInTextEditorClick = new RelayCommand( OpenInTextEditor,
                 () => _pathToFile != null && _pathToFile.Any() );
-            ApproximateClick = new RelayCommand( Aproximate );
-            DoStuffClick = new RelayCommand( DoStuff );
+            ApproximateClick = new RelayCommand( AproximateAndPlot );
+            DoStuffClick = new RelayCommand( ShowPlotFromDataWithoutLearning );
             _plotModelViewModel = new PlotViewModel();
             _errorPlotModelViewModel = new ErrorPlotViewModel();
             GenerateClick = new RelayCommand( Generate );
         }
 
+        #endregion
+
         #region Commands
 
-        public ICommand OpenFileClick { get; }
+        public ICommand OpenTrainFileClick { get; }
+        public ICommand OpenTestFileClick { get; }
         public RelayCommand OpenInTextEditorClick { get; }
         public ICommand ApproximateClick { get; }
         public ICommand GenerateClick { get; }
@@ -38,20 +44,36 @@ namespace RDFNetwork.RBFApproximation.ViewModel
 
         #region Public Properties
 
-        public string FileName
+        // File
+        public string TrainFileName
         {
-            get => _fileName;
+            get => _trainFileName;
             private set
             {
-                if (_fileName == value)
+                if (_trainFileName == value)
                     return;
 
-                _fileName = value;
+                _trainFileName = value;
                 OpenInTextEditorClick.RaiseCanExecuteChanged();
                 OnPropertyChanged();
             }
         }
 
+        public string TestFileName
+        {
+            get => _testFileName;
+            private set
+            {
+                if ( _testFileName == value)
+                    return;
+
+                _testFileName = value;
+                OpenInTextEditorClick.RaiseCanExecuteChanged();
+                OnPropertyChanged();
+            }
+        }
+
+        // Plot
         public PlotModel PlotModel
         {
             get => _plotModelViewModel.PlotModel;
@@ -64,49 +86,85 @@ namespace RDFNetwork.RBFApproximation.ViewModel
             internal set => _errorPlotModelViewModel.PlotModel = value;
         }
 
+        public bool Flatten { get; set; } = false;
+        public int AnimationStep { get; set; } = 20;
+
+        // Netwok Settings
         public double LerningRate { get; set; } = 0.05;
         public double Momentum { get; set; } = 0.5;
-        public double Alfa { get; set; } = 1.1;
+        public double Alfa { get; set; } = 1.0;
         public int EpochsNumber { get; set; } = 500;
         public int NeuronNumber { get; set; } = 10;
-        public bool Flatten { get; set; } = false;
+        public int NeighbourNumber { get; set; } = 4;
 
         #endregion
 
+        #region Methods
+
+        //TODO refactor
+        public void Generate()
+        {
+            _approximation.SamplePoints = SampleRepository.GetInputSamplePoints();
+            SetUpNetworkParameters();
+            _approximation.GenerateCentroids();
+            _approximation.AssignSamplePointsToNearestCentroids();
+            _plotModelViewModel.ShowGeneratedCentroids( _approximation.SamplePoints, _approximation.Centroids,
+                Flatten );
+        }
+
+        //TODO refactor
+        public void ShowPlotFromDataWithoutLearning()
+        {
+            _approximation.SamplePoints = SampleRepository.GetInputSamplePoints();
+            _approximation.AssignSamplePointsToNearestCentroids();
+            _approximation.DoStuffer();
+
+            _plotModelViewModel.SetUpPlotModelData( _approximation );
+            _errorPlotModelViewModel.SetUpPlotModelData( _approximation.TotalErrors, _approximation.TotalTestErrors );
+            _plotModelViewModel.PlotModel.InvalidatePlot( true );
+            _errorPlotModelViewModel.PlotModel.InvalidatePlot( true );
+            foreach (var ax in _plotModelViewModel.PlotModel.Axes)
+                ax.Maximum = ax.Minimum = Double.NaN;
+            PlotModel.ResetAllAxes();
+            foreach (var ax in _errorPlotModelViewModel.PlotModel.Axes)
+                ax.Maximum = ax.Minimum = Double.NaN;
+            PlotModel.ResetAllAxes();
+        }
+
+        #endregion
 
         #region Private Members
 
-        private string _fileName;
+        // Variables
+        private readonly Approximation _approximation;
+
+        private string _trainFileName;
+        private string _testFileName;
         private string _pathToFile;
+
         private readonly PlotViewModel _plotModelViewModel;
         private readonly ErrorPlotViewModel _errorPlotModelViewModel;
-        private Approximation _app;
+
         private DispatcherTimer _timer;
-        private int iterator = 0;
-        private bool TemporaryTemper = false;
+        private int _iterator;
 
-        public void Generate()
+        private void OpenTrainFile()
         {
-            _app = new Approximation( NeuronNumber, Alfa );
-            _app.SamplePoints = SampleRepository.GetInputSamplePoints();
-            _app.AssignSamplePointsToNearestCentroids();
-            _plotModelViewModel.ShowGeneratedCentroids( _app.SamplePoints, _app.Centroids, TemporaryTemper );
-        }
-
-        private void OpenFile()
-        {
-            OpenFileDialog openFileDialog =
-                new OpenFileDialog() {Filter = "TextFiles (*.txt)|*.txt", RestoreDirectory = true};
+            OpenFileDialog openFileDialog = new OpenFileDialog()
+            {
+                Filter = "TextFiles (*.txt)|*.txt",
+                RestoreDirectory = true
+            };
 
             if (openFileDialog.ShowDialog() == true)
             {
                 _pathToFile = openFileDialog.FileName;
-                FileName = openFileDialog.FileName.Split( '\\' ).Last();
+                TrainFileName = openFileDialog.FileName.Split( '\\' ).Last();
                 try
                 {
                     SampleRepository.TrainSamples = FileReader.ReadFromFile( openFileDialog.FileName );
                     _plotModelViewModel.PlotModel.Series.Clear();
-                    _plotModelViewModel.ShowSamples( TemporaryTemper );
+                    _plotModelViewModel.ShowSamples( Flatten );
                 }
                 catch (FileNotFoundException fnfe)
                 {
@@ -119,52 +177,86 @@ namespace RDFNetwork.RBFApproximation.ViewModel
             }
         }
 
-
-        private void Aproximate()
+        private void OpenTestFile()
         {
-            iterator = 0;
-            _app.StuffDooer();
+            OpenFileDialog openFileDialog = new OpenFileDialog()
+            {
+                Filter = "TextFiles (*.txt)|*.txt",
+                RestoreDirectory = true
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                _pathToFile = openFileDialog.FileName;
+                TestFileName = openFileDialog.FileName.Split( '\\' ).Last();
+                try
+                {
+                    SampleRepository.TestSamples = FileReader.ReadFromFile( openFileDialog.FileName );
+                }
+                catch (FileNotFoundException fnfe)
+                {
+                    MessageBox.Show( fnfe.Message );
+                }
+                catch (FormatException fe)
+                {
+                    MessageBox.Show( fe.Message );
+                }
+            }
+        }
+
+        //Methods
+        private void AproximateAndPlot()
+        {
+            SetUpNetworkParameters();
+            _approximation.CalculateBetaForEachCentroid( Alfa );
+            _iterator = 0;
+            _approximation.SetupAproximationAlgorithm();
             StartLearningProcess();
         }
 
-
         private void StartLearningProcess()
         {
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds( 0 ) };
+            _timer = new DispatcherTimer {Interval = TimeSpan.FromMilliseconds( 0 )};
             _timer.Tick += AutoLearningTicker;
             _timer.Start();
         }
 
         private void AutoLearningTicker( object sender, EventArgs e )
         {
-            iterator += EpochsNumber / 20;
-            if (iterator >= EpochsNumber)
+            _iterator += AnimationStep;
+            if (_iterator >= EpochsNumber)
                 _timer.Stop();
 
-            for (int i=0 ;i<EpochsNumber/20; i++ )
-            _app.Learn();
-            _plotModelViewModel.SetUpPlotModelData( _app.Centroids, _app.SamplePoints, _app.Outputs, _app );
-            _errorPlotModelViewModel.SetUpPlotModelData( _app.TotalErrors );
-            _plotModelViewModel.PlotModel.InvalidatePlot( true );
-            _errorPlotModelViewModel.PlotModel.InvalidatePlot( true );
-
+            for (int i = 0; i < AnimationStep; i++)
+                _approximation.Learn();
+            DrawPlot();
+            DrawErrorPlot();
         }
 
-        public void DoStuff()
+        private void DrawPlot()
         {
-            _app.SamplePoints = SampleRepository.GetInputSamplePoints();
-            _app.AssignSamplePointsToNearestCentroids();
-            List<double> outputsList = _app.DoStuffer();
-            _plotModelViewModel.SetUpPlotModelData( _app.Centroids, _app.SamplePoints, _app.Outputs, _app );
-            _errorPlotModelViewModel.SetUpPlotModelData( _app.TotalErrors );
+            _plotModelViewModel.SetUpPlotModelData( _approximation );
             _plotModelViewModel.PlotModel.InvalidatePlot( true );
+            foreach ( var ax in _plotModelViewModel.PlotModel.Axes )
+                ax.Maximum = ax.Minimum = Double.NaN;
+            PlotModel.ResetAllAxes();
+        }
+
+        private void DrawErrorPlot()
+        {
+            _errorPlotModelViewModel.SetUpPlotModelData( _approximation.TotalErrors, _approximation.TotalTestErrors );
             _errorPlotModelViewModel.PlotModel.InvalidatePlot( true );
-            foreach (var ax in _plotModelViewModel.PlotModel.Axes)
+            foreach ( var ax in _errorPlotModelViewModel.PlotModel.Axes )
                 ax.Maximum = ax.Minimum = Double.NaN;
             PlotModel.ResetAllAxes();
-            foreach (var ax in _errorPlotModelViewModel.PlotModel.Axes)
-                ax.Maximum = ax.Minimum = Double.NaN;
-            PlotModel.ResetAllAxes();
+        }
+
+        private void SetUpNetworkParameters()
+        {
+            _approximation.LearningRate = LerningRate;
+            _approximation.Momentum = Momentum;
+            _approximation.HiddenNeuronsNumber = NeuronNumber;
+            _approximation.NeighbourNumber = NeighbourNumber;
         }
 
         private void OpenInTextEditor()
